@@ -1,36 +1,52 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const User = require('./User');
 
-const journalEntrySchema = mongoose.Schema(
+const JournalEntry = sequelize.define(
+  'JournalEntry',
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'User',
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: User,
+        key: 'id',
+      },
     },
     content: {
-      type: String,
-      required: true,
+      type: DataTypes.TEXT,
+      allowNull: false,
     },
     mood_score: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5,
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 1,
+        max: 5,
+      },
     },
-    sentiment_analysis: {
-      polarity: {
-        type: Number,
-      },
-      label: {
-        type: String, // 'positive', 'neutral', 'negative'
-      },
+    sentiment_polarity: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    sentiment_label: {
+      type: DataTypes.STRING, // 'positive', 'neutral', 'negative'
+      allowNull: true,
     },
   },
   {
     timestamps: true,
+    tableName: 'journal_entries',
   }
 );
 
-const JournalEntry = mongoose.model('JournalEntry', journalEntrySchema);
+// Define association
+JournalEntry.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(JournalEntry, { foreignKey: 'user_id' });
 
 module.exports = JournalEntry;

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const { Op, sequelize } = require('sequelize');
 const JournalEntry = require('../models/JournalEntry');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -9,8 +10,9 @@ const { protect } = require('../middleware/authMiddleware');
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    const entries = await JournalEntry.find({ user_id: req.user._id }).sort({
-      createdAt: -1,
+    const entries = await JournalEntry.findAll({
+      where: { user_id: req.user.id },
+      order: [['createdAt', 'DESC']],
     });
     res.json(entries);
   } catch (error) {
@@ -28,30 +30,28 @@ router.post('/', protect, async (req, res) => {
     return res.status(400).json({ message: 'Please provide content and mood score' });
   }
 
-  // Call AI Service for sentiment analysis
-  let sentiment_analysis = {
-    polarity: 0,
-    label: 'neutral',
-  };
+  let sentiment_polarity = 0;
+  let sentiment_label = 'neutral';
 
   try {
-    // Assuming python service runs on port 5001
+    // Call AI Service for sentiment analysis
     const aiResponse = await axios.post('http://localhost:5001/analyze', {
       text: content,
     });
-    sentiment_analysis = aiResponse.data;
+    sentiment_polarity = aiResponse.data.polarity;
+    sentiment_label = aiResponse.data.label;
   } catch (error) {
     console.error('AI Service Error:', error.message);
-    // Fallback or just log error, proceed without analysis or with default
-    // We will proceed with default neutral if AI service fails/not running
+    // Fallback to neutral if AI service fails
   }
 
   try {
     const entry = await JournalEntry.create({
-      user_id: req.user._id,
+      user_id: req.user.id,
       content,
       mood_score,
-      sentiment_analysis,
+      sentiment_polarity,
+      sentiment_label,
     });
 
     res.status(201).json(entry);
@@ -65,18 +65,18 @@ router.post('/', protect, async (req, res) => {
 // @access  Private
 router.delete('/:id', protect, async (req, res) => {
   try {
-    const entry = await JournalEntry.findById(req.params.id);
+    const entry = await JournalEntry.findByPk(req.params.id);
 
     if (!entry) {
       return res.status(404).json({ message: 'Entry not found' });
     }
 
     // Make sure user owns the entry
-    if (entry.user_id.toString() !== req.user._id.toString()) {
+    if (entry.user_id !== req.user.id) {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    await entry.deleteOne();
+    await entry.destroy();
     res.json({ message: 'Entry removed' });
   } catch (error) {
     res.status(500).json({ message: error.message });

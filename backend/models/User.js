@@ -1,42 +1,68 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
+const { sequelize } = require('../config/db');
 
-const userSchema = mongoose.Schema(
+const User = sequelize.define(
+  'User',
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     username: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
       unique: true,
     },
     email: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
       unique: true,
     },
     password: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
+    resetOTP: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'One-Time Password for password reset'
+    },
+    resetOTPExpiry: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Expiry time for the reset OTP'
+    },
+    resetTokenExpiry: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Session timeout for reset token'
+    }
   },
   {
     timestamps: true,
+    // Prevent Sequelize from pluralizing table name
+    tableName: 'users',
   }
 );
 
-// Method to check password match
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-// Middleware to hash password pre-save
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    next();
-  }
+// Hash password before saving
+User.beforeCreate(async (user) => {
   const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  user.password = await bcrypt.hash(user.password, salt);
 });
 
-const User = mongoose.model('User', userSchema);
+User.beforeUpdate(async (user) => {
+  if (user.changed('password')) {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+  }
+});
+
+// Method to check password match
+User.prototype.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 module.exports = User;
