@@ -54,7 +54,7 @@ const Chatbot = () => {
             width: '60px', 
             height: '60px', 
             padding: 0, 
-            boxShadow: '0 4px 20px rgba(99, 102, 241, 0.6)',
+            boxShadow: '0 6px 24px rgba(108, 92, 231, 0.18)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -62,11 +62,11 @@ const Chatbot = () => {
           }}
           onMouseEnter={(e) => {
             e.target.style.transform = 'scale(1.1)';
-            e.target.style.boxShadow = '0 6px 30px rgba(99, 102, 241, 0.8)';
+            e.target.style.boxShadow = '0 8px 32px rgba(108, 92, 231, 0.22)';
           }}
           onMouseLeave={(e) => {
             e.target.style.transform = 'scale(1)';
-            e.target.style.boxShadow = '0 4px 20px rgba(99, 102, 241, 0.6)';
+            e.target.style.boxShadow = '0 6px 24px rgba(108, 92, 231, 0.18)';
           }}
         >
           <MessageCircle size={28} />
@@ -106,22 +106,22 @@ const Chatbot = () => {
             {/* Header */}
             <div style={{ 
               padding: '1.25rem', 
-              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%)',
+              background: 'var(--gradient-primary)',
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center', 
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+              borderBottom: '1px solid var(--glass-border)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Sparkles size={22} color="#6366f1" />
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>MindPulse AI</h3>
+                <Sparkles size={22} color="var(--primary)" />
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-dark)' }}>MindPulse AI</h3>
               </div>
               <button 
                 onClick={toggleChat} 
                 style={{ 
                   background: 'none', 
                   border: 'none', 
-                  color: 'white', 
+                  color: 'var(--text-dark)', 
                   cursor: 'pointer',
                   padding: '0.5rem',
                   borderRadius: '0.5rem',
@@ -157,14 +157,15 @@ const Chatbot = () => {
                   <div
                     style={{
                       background: msg.sender === 'user' 
-                        ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' 
-                        : 'rgba(99, 102, 241, 0.15)',
+                            ? 'var(--gradient-primary)' 
+                            : 'rgba(108, 92, 231, 0.08)',
                       padding: '0.75rem 1rem',
                       borderRadius: msg.sender === 'user' ? '1rem 1rem 0.25rem 1rem' : '1rem 1rem 1rem 0.25rem',
                       fontSize: '0.95rem',
                       lineHeight: '1.4',
-                      border: msg.sender === 'user' ? 'none' : '1px solid rgba(99, 102, 241, 0.3)',
-                      boxShadow: msg.sender === 'user' ? '0 2px 8px rgba(99, 102, 241, 0.3)' : 'none'
+                          border: msg.sender === 'user' ? 'none' : '1px solid rgba(108, 92, 231, 0.12)',
+                          boxShadow: msg.sender === 'user' ? '0 4px 12px rgba(108, 92, 231, 0.08)' : 'none',
+                          color: msg.sender === 'user' ? '#ffffff' : 'var(--text-dark)'
                     }}
                   >
                     {msg.text}
@@ -179,10 +180,10 @@ const Chatbot = () => {
               onSubmit={handleSend} 
               style={{ 
                 padding: '1rem', 
-                borderTop: '1px solid rgba(255, 255, 255, 0.1)', 
+                borderTop: '1px solid var(--glass-border)', 
                 display: 'flex', 
                 gap: '0.75rem',
-                background: 'rgba(0, 0, 0, 0.1)'
+                background: 'transparent'
               }}
             >
               <input 
@@ -192,11 +193,11 @@ const Chatbot = () => {
                 placeholder="Type your message..."
                 style={{ 
                   flex: 1, 
-                  background: 'rgba(30, 41, 59, 0.6)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  background: '#fff',
+                  border: '1px solid rgba(15, 23, 42, 0.06)',
                   borderRadius: '0.75rem', 
                   padding: '0.75rem 1rem', 
-                  color: 'white',
+                  color: 'var(--text-dark)',
                   fontSize: '0.9rem',
                   outline: 'none',
                   transition: 'all 0.2s'
@@ -207,7 +208,7 @@ const Chatbot = () => {
               <button 
                 type="submit" 
                 style={{ 
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                  background: 'var(--gradient-primary)',
                   border: 'none', 
                   color: 'white', 
                   cursor: 'pointer',
@@ -217,7 +218,7 @@ const Chatbot = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   transition: 'all 0.2s',
-                  boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)'
+                  boxShadow: '0 4px 12px rgba(108, 92, 231, 0.12)'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.transform = 'scale(1.05)';

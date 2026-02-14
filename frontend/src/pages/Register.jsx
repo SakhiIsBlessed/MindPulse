@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { UserPlus, Heart, AlertCircle, CheckCircle } from 'lucide-react';
+import { UserPlus, Heart, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -73,7 +74,7 @@ const Register = () => {
         zIndex: 1
       }}>
         {/* Header with icon */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -81,16 +82,17 @@ const Register = () => {
             width: '60px',
             height: '60px',
             borderRadius: '1rem',
-            background: 'linear-gradient(135deg, #ec4899 0%, #f87171 100%)',
-            marginBottom: '1rem',
-            boxShadow: '0 4px 15px rgba(236, 72, 153, 0.4)'
+            background: 'var(--gradient-secondary)',
+            boxShadow: '0 6px 18px rgba(236,72,153,0.12)'
           }}>
             <UserPlus size={32} color="white" />
           </div>
-          <h2 style={{ margin: '0 0 0.5rem 0', color: 'white' }}>Join MindPulse</h2>
-          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
-            Start your mental wellness journey today
-          </p>
+          <div>
+            <h2 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-dark)' }}>Join MindPulse</h2>
+            <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
+              Create an account and start tracking your mood with beautiful insights.
+            </p>
+          </div>
         </div>
 
         {/* Error Message - Professional styling */}
@@ -200,18 +202,37 @@ const Register = () => {
 
           <div className="mb-4">
             <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Create a strong password"
-              className="input-field"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Create a strong password"
+                className="input-field"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)'
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>
-              At least 6 characters recommended
+              Use a strong password to keep your journal private.
             </p>
           </div>
 

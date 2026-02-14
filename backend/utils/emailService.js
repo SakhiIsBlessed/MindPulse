@@ -1,21 +1,14 @@
 const nodemailer = require('nodemailer');
 
-// Configure email transporter
-// For development/testing, you can use Gmail or other email services
-// Make sure to set SMTP credentials in .env file
-const transporter = nodemailer.createTransport({
-  // Using Gmail SMTP - you can change this to your preferred email service
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER || 'your-email@gmail.com',
-    pass: process.env.EMAIL_PASS || 'your-app-password', // Use Gmail App Password, not regular password
-  },
-});
+// Transporter cache and metadata
+let transporterCache = null;
+let transporterIsTest = false;
 
-// Alternative: For testing without real email, use ethereal.email
+// Create an Ethereal test transporter (for dev when real SMTP creds are not provided)
 const createTestTransporter = async () => {
   const testAccount = await nodemailer.createTestAccount();
-  return nodemailer.createTransport({
+  transporterIsTest = true;
+  transporterCache = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
     port: 587,
     secure: false,
@@ -24,6 +17,43 @@ const createTestTransporter = async () => {
       pass: testAccount.pass,
     },
   });
+  return transporterCache;
+};
+
+// Get or create transporter. Prefer real SMTP when env vars are present, otherwise fallback to Ethereal.
+const getTransporter = async () => {
+  if (transporterCache) return { transporter: transporterCache, isTest: transporterIsTest };
+
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  if (emailUser && emailPass) {
+    transporterIsTest = false;
+    transporterCache = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
+    });
+
+    // Verify transporter (will throw if credentials are invalid)
+    try {
+      await transporterCache.verify();
+      console.log('✅ Email transporter verified (SMTP)');
+    } catch (err) {
+      console.error('⚠️ SMTP verify failed, falling back to Ethereal test account:', err.message);
+      // fallback to test transporter
+      return { transporter: await createTestTransporter(), isTest: transporterIsTest };
+    }
+
+    return { transporter: transporterCache, isTest: transporterIsTest };
+  }
+
+  // No real SMTP creds — create a test account
+  return { transporter: await createTestTransporter(), isTest: transporterIsTest };
 };
 
 /**
@@ -192,7 +222,12 @@ const sendOTPEmail = async (email, otp) => {
       text: `Your MindPulse password reset code is: ${otp}\n\nValid for 10 minutes.\n\nNever share this code with anyone.`,
     };
 
-    return await transporter.sendMail(mailOptions);
+    const { transporter, isTest } = await getTransporter();
+    const info = await transporter.sendMail(mailOptions);
+    if (isTest) {
+      console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
+    }
+    return info;
   } catch (error) {
     console.error('Error sending OTP email:', error);
     throw new Error('Failed to send OTP email');
@@ -318,10 +353,53 @@ const sendPasswordResetConfirmation = async (email, username) => {
       text: `Hi ${username},\n\nYour password has been successfully reset. You can now log in with your new password.\n\nIf you did not request this, please contact support.`,
     };
 
-    return await transporter.sendMail(mailOptions);
+    const { transporter, isTest } = await getTransporter();
+    const info = await transporter.sendMail(mailOptions);
+    if (isTest) {
+      console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
+    }
+    return info;
   } catch (error) {
     console.error('Error sending confirmation email:', error);
     throw new Error('Failed to send confirmation email');
+  }
+};
+
+/**
+ * Send welcome email on new registration
+ * @param {string} email
+ * @param {string} username
+ */
+const sendWelcomeEmail = async (email, username) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'noreply@mindpulse.com',
+      to: email,
+      subject: `Welcome to MindPulse, ${username}! 🧠`,
+      html: `
+        <div style="font-family: Arial, Helvetica, sans-serif; background:#0f172a; color:#e2e8f0; padding:24px;">
+          <div style="max-width:600px;margin:0 auto;background:rgba(17,24,39,0.9);padding:28px;border-radius:10px;border:1px solid rgba(99,102,241,0.08);">
+            <h2 style="color:#a78bfa;margin:0 0 10px;">Welcome to MindPulse, ${username}!</h2>
+            <p style="color:#94a3b8;margin:0 0 16px;">Thanks for creating an account. We're glad you're here — MindPulse helps you track moods and journal your way to better wellbeing.</p>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="display:inline-block;padding:10px 18px;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">Get Started</a>
+            <p style="color:#64748b;margin-top:18px;font-size:13px;">If you didn't sign up for MindPulse, you can ignore this message.</p>
+            <hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:18px 0;" />
+            <p style="color:#64748b;font-size:12px;margin:0;">© 2026 MindPulse. All rights reserved.</p>
+          </div>
+        </div>
+      `,
+      text: `Welcome to MindPulse, ${username}! Visit ${process.env.FRONTEND_URL || 'http://localhost:5173'}/login to get started.`,
+    };
+
+    const { transporter, isTest } = await getTransporter();
+    const info = await transporter.sendMail(mailOptions);
+    if (isTest) {
+      console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
+    }
+    return info;
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+    throw new Error('Failed to send welcome email');
   }
 };
 
@@ -329,4 +407,5 @@ module.exports = {
   sendOTPEmail,
   sendPasswordResetConfirmation,
   createTestTransporter,
+  sendWelcomeEmail,
 };

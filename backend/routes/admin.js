@@ -4,6 +4,8 @@ const { sequelize } = require('../config/db');
 const JournalEntry = require('../models/JournalEntry');
 const { protect } = require('../middleware/authMiddleware');
 const { Op } = require('sequelize');
+const nodemailer = require('nodemailer');
+const { sendWelcomeEmail } = require('../utils/emailService');
 
 // @desc    Get anonymized aggregated stats
 // @route   GET /api/admin/stats
@@ -61,4 +63,29 @@ router.get('/stats', protect, async (req, res) => {
   }
 });
 
+// @desc    Send a test email (sends a welcome-style email)
+// @route   POST /api/admin/test-email
+// @access  Private (requires auth)
+router.post('/test-email', protect, async (req, res) => {
+  try {
+    const { to } = req.body;
+    const target = to || process.env.EMAIL_USER;
+
+    if (!target) {
+      return res.status(400).json({ message: 'No target email provided and no EMAIL_USER set' });
+    }
+
+    const info = await sendWelcomeEmail(target, 'Test User');
+
+    // Try to get an Ethereal preview URL if available
+    const preview = nodemailer.getTestMessageUrl(info) || null;
+
+    res.json({ message: 'Test email sent (or queued)', previewUrl: preview });
+  } catch (error) {
+    console.error('Test email error:', error);
+    res.status(500).json({ message: error.message || 'Error sending test email' });
+  }
+});
+
 module.exports = router;
+

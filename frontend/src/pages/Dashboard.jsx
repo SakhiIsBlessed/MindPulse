@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import MoodChart from '../components/MoodChart';
 import EntryList from '../components/EntryList';
 import Chatbot from '../components/Chatbot';
+import { motion } from 'framer-motion';
 import { LogOut, Heart, TrendingUp, Zap } from 'lucide-react';
 
 const Dashboard = () => {
@@ -76,15 +77,15 @@ const Dashboard = () => {
       alignItems: 'center', 
       justifyContent: 'center', 
       minHeight: '100vh',
-      color: 'white',
+      color: 'var(--text-dark)',
       fontSize: '1.2rem'
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{
           width: '50px',
           height: '50px',
-          border: '4px solid rgba(99, 102, 241, 0.3)',
-          borderTop: '4px solid #6366f1',
+          border: '4px solid rgba(108,92,231,0.18)',
+          borderTop: '4px solid var(--primary)',
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
           margin: '0 auto 1rem'
@@ -100,7 +101,8 @@ const Dashboard = () => {
   );
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+    <div>
+      <motion.main initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
       {/* Header */}
       <div className="glass-card animate-in" style={{ 
         display: 'flex', 
@@ -138,7 +140,7 @@ const Dashboard = () => {
               <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                 Average Mood
               </p>
-              <h3 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '2rem' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)', fontSize: '2rem' }}>
                 {avgMood.toFixed(1)}
               </h3>
               <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -148,12 +150,13 @@ const Dashboard = () => {
             <div style={{
               width: '50px',
               height: '50px',
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              background: 'var(--gradient-primary)',
               borderRadius: '1rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1.5rem'
+              fontSize: '1.5rem',
+              color: 'white'
             }}>
               {moodEmojis[Math.min(Math.floor(avgMood) - 1, 4)]}
             </div>
@@ -166,7 +169,7 @@ const Dashboard = () => {
               <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                 Total Entries
               </p>
-              <h3 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '2rem' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)', fontSize: '2rem' }}>
                 {entries.length}
               </h3>
               <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -176,11 +179,12 @@ const Dashboard = () => {
             <div style={{
               width: '50px',
               height: '50px',
-              background: 'linear-gradient(135deg, #ec4899 0%, #f87171 100%)',
+              background: 'var(--gradient-secondary)',
               borderRadius: '1rem',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              color: 'white'
             }}>
               <Heart size={28} color="white" />
             </div>
@@ -193,7 +197,7 @@ const Dashboard = () => {
               <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                 Streak
               </p>
-              <h3 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '2rem' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)', fontSize: '2rem' }}>
                 {entries.length > 0 ? Math.floor(entries.length / 7) : 0}w
               </h3>
               <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -203,11 +207,12 @@ const Dashboard = () => {
             <div style={{
               width: '50px',
               height: '50px',
-              background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
+              background: 'var(--gradient-accent)',
               borderRadius: '1rem',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              color: 'white'
             }}>
               <TrendingUp size={28} color="white" />
             </div>
@@ -247,11 +252,11 @@ const Dashboard = () => {
                       style={{
                         padding: '0.875rem',
                         borderRadius: '0.75rem',
-                        border: moodScore === score ? '2px solid #6366f1' : '2px solid rgba(255, 255, 255, 0.2)',
-                        background: moodScore === score 
-                          ? 'rgba(99, 102, 241, 0.2)' 
-                          : 'rgba(255, 255, 255, 0.05)',
-                        color: 'white',
+                          border: moodScore === score ? '2px solid var(--primary)' : '2px solid rgba(15,23,42,0.04)',
+                          background: moodScore === score 
+                            ? 'rgba(108,92,231,0.08)' 
+                            : 'transparent',
+                          color: 'var(--text-dark)',
                         cursor: 'pointer',
                         fontSize: '1.5rem',
                         transition: 'all 0.3s ease'
@@ -307,6 +312,7 @@ const Dashboard = () => {
         </div>
       </div>
 
+      </motion.main>
       {/* Chatbot */}
       <Chatbot />
     </div>

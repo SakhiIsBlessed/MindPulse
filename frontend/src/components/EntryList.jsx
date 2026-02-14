@@ -47,8 +47,8 @@ const EntryList = ({ entries, onDelete }) => {
           <div 
             key={entry._id} 
             style={{
-              background: 'rgba(30, 41, 59, 0.3)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--glass-border)',
               borderRadius: '1rem',
               padding: '1rem',
               transition: 'all 0.3s ease',
@@ -56,13 +56,13 @@ const EntryList = ({ entries, onDelete }) => {
               animation: `fadeInUp 0.4s ease ${idx * 0.05}s backwards`
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(30, 41, 59, 0.5)';
-              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+              e.currentTarget.style.background = '#fff';
+              e.currentTarget.style.borderColor = 'rgba(108, 92, 231, 0.08)';
               e.currentTarget.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(30, 41, 59, 0.3)';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.background = 'var(--bg-card)';
+              e.currentTarget.style.borderColor = 'var(--glass-border)';
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
@@ -134,7 +134,7 @@ const EntryList = ({ entries, onDelete }) => {
             <p style={{ 
               lineHeight: '1.6', 
               margin: '0.75rem 0', 
-              color: 'var(--text-light)',
+              color: 'var(--text-dark)',
               fontSize: '0.95rem',
               overflow: 'hidden',
               display: '-webkit-box',
@@ -154,7 +154,7 @@ const EntryList = ({ entries, onDelete }) => {
                               width: '6px', 
                               height: '6px', 
                               borderRadius: '50%', 
-                              backgroundColor: i < entry.mood_score ? '#6366f1' : '#334155',
+                                backgroundColor: i < entry.mood_score ? 'var(--primary)' : '#e6edf6',
                               transition: 'all 0.3s ease'
                           }} 
                       />

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { sendOTPEmail, sendPasswordResetConfirmation } = require('../utils/emailService');
+const { sendOTPEmail, sendPasswordResetConfirmation, sendWelcomeEmail } = require('../utils/emailService');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -48,6 +48,11 @@ router.post('/register', async (req, res) => {
         email: user.email,
         token: generateToken(user.id),
       });
+
+      // Send welcome email asynchronously; don't block registration if it fails
+      sendWelcomeEmail(user.email, user.username).catch((err) =>
+        console.error('Welcome email error:', err)
+      );
     } else {
       res.status(400).json({ message: 'Invalid user data' });
     }

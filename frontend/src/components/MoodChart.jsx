@@ -45,16 +45,16 @@ const MoodChart = ({ entries }) => {
       const sentimentEmojis = { positive: '😊', negative: '😔', neutral: '😐' };
       return (
         <div style={{
-          backgroundColor: 'rgba(30, 41, 59, 0.9)',
-          border: '1px solid rgba(99, 102, 241, 0.5)',
+          backgroundColor: '#ffffff',
+          border: '1px solid rgba(15, 23, 42, 0.06)',
           borderRadius: '0.75rem',
           padding: '0.75rem',
-          color: '#f8fafc'
+          color: 'var(--text-dark)'
         }}>
           <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '600' }}>
             {data.fullDate}
           </p>
-          <p style={{ margin: '0', fontSize: '0.85rem', color: '#6366f1' }}>
+          <p style={{ margin: '0', fontSize: '0.85rem', color: 'var(--primary)' }}>
             Mood: {data.mood}/5 {sentimentEmojis[data.sentiment] || '😐'}
           </p>
           <p style={{ margin: '0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -83,20 +83,20 @@ const MoodChart = ({ entries }) => {
           </defs>
           <CartesianGrid 
             strokeDasharray="3 3" 
-            stroke="rgba(255,255,255,0.08)"
+            stroke="rgba(15,23,42,0.04)"
             verticalPoints={data.length}
           />
           <XAxis 
             dataKey="date" 
-            stroke="#94a3b8"
+            stroke="var(--text-muted)"
             style={{ fontSize: '12px' }}
-            tick={{ fill: '#94a3b8' }}
+            tick={{ fill: 'var(--text-muted)' }}
           />
           <YAxis 
             domain={[0, 5]} 
-            stroke="#94a3b8"
+            stroke="var(--text-muted)"
             ticks={[0, 1, 2, 3, 4, 5]}
-            tick={{ fill: '#94a3b8' }}
+            tick={{ fill: 'var(--text-muted)' }}
             width={35}
           />
           <Tooltip content={<CustomTooltip />} />

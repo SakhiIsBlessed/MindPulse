@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogIn, Heart, AlertCircle, CheckCircle, Key, X } from 'lucide-react';
+import { LogIn, Heart, AlertCircle, CheckCircle, Key, X, Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,6 +19,9 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [forgotError, setForgotError] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
@@ -181,7 +185,7 @@ const Login = () => {
         zIndex: 1
       }}>
         {/* Header with icon */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -189,13 +193,13 @@ const Login = () => {
             width: '60px',
             height: '60px',
             borderRadius: '1rem',
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            background: 'var(--gradient-primary)',
             marginBottom: '1rem',
-            boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)'
+            boxShadow: '0 6px 18px rgba(108,92,231,0.12)'
           }}>
             <Heart size={32} color="white" fill="white" />
           </div>
-          <h2 style={{ margin: '0 0 0.5rem 0', color: 'white' }}>Welcome Back</h2>
+          <h2 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)' }}>Welcome Back</h2>
           <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
             Track your mental wellness journey
           </p>
@@ -285,35 +289,55 @@ const Login = () => {
           </div>
 
           <div className="mb-4">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-              <label htmlFor="password">Password</label>
+            <label htmlFor="password">Password</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Your secure password"
+                className="input-field"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)'
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            <div style={{ marginTop: '0.5rem' }}>
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#6366f1',
+                  color: 'var(--primary)',
                   cursor: 'pointer',
-                  fontSize: '0.85rem',
+                  fontSize: '0.9rem',
                   textDecoration: 'underline',
-                  fontWeight: '500',
+                  fontWeight: '600',
                   padding: 0
                 }}
               >
-                Forgot?
+                Forgot your password?
               </button>
             </div>
-            <input
-              id="password"
-              type="password"
-              placeholder="Your secure password"
-              className="input-field"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
           </div>
 
           <button 
@@ -388,14 +412,14 @@ const Login = () => {
                 }}>
                   <Key size={20} color="white" />
                 </div>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'white' }}>Reset Password</h3>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-dark)' }}>Reset Password</h3>
               </div>
               <button
                 onClick={closeForgotPassword}
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: 'white',
+                  color: 'var(--text-dark)',
                   cursor: 'pointer',
                   padding: '0.5rem',
                   display: 'flex',
@@ -546,8 +570,8 @@ const Login = () => {
                     width: '100%',
                     marginTop: '0.75rem',
                     background: 'none',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    color: 'white',
+                    border: '1px solid rgba(15,23,42,0.04)',
+                    color: 'var(--text-dark)',
                     padding: '0.75rem',
                     borderRadius: '0.75rem',
                     cursor: 'pointer',
@@ -567,29 +591,67 @@ const Login = () => {
                 </p>
                 <div className="mb-4">
                   <label htmlFor="newPassword">New Password</label>
-                  <input
-                    id="newPassword"
-                    type="password"
-                    placeholder="At least 6 characters"
-                    className="input-field"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    disabled={forgotLoading}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="newPassword"
+                      type={showNewPassword ? 'text' : 'password'}
+                      placeholder="At least 6 characters"
+                      className="input-field"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      disabled={forgotLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(s => !s)}
+                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                      style={{
+                        position: 'absolute',
+                        right: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)'
+                      }}
+                    >
+                      {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="mb-4">
                   <label htmlFor="confirmPassword">Confirm Password</label>
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Re-enter your password"
-                    className="input-field"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    disabled={forgotLoading}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Re-enter your password"
+                      className="input-field"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      disabled={forgotLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(s => !s)}
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      style={{
+                        position: 'absolute',
+                        right: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)'
+                      }}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
                 <button
                   type="submit"
