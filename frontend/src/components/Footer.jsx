@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Twitter, Github, Phone } from 'lucide-react';
+import { Mail, Twitter, Github, Phone, Linkedin } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => (
@@ -17,8 +17,8 @@ const Footer = () => (
           <a href="tel:+91 8530932462" className="footer-contact-item"><Phone /> +91 8530932462</a>
         </div>
         <div className="footer-social">
-          <a href="https://twitter.com" target="_blank" rel="noreferrer" className="icon-btn"><Twitter /></a>
-          <a href="https://github.com" target="_blank" rel="noreferrer" className="icon-btn"><Github /></a>
+          <a href="https://www.linkedin.com/in/prachi-pawar-34156930a/" target="_blank" rel="noreferrer" className="icon-btn"><Linkedin /></a>
+          <a href="https://github.com/PrachiPawar018" target="_blank" rel="noreferrer" className="icon-btn"><Github /></a>
         </div>
       </div>
 
