@@ -11,7 +11,6 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   // Forgot Password States
@@ -20,6 +19,7 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [forgotError, setForgotError] = useState('');
@@ -156,8 +156,7 @@ const Login = () => {
       minHeight: '100vh',
       width: '100vw',
       margin: 0,
-      padding: '2rem 1rem',
-      paddingTop: '4rem'
+      padding: 0
     }}>
       {/* Animated background elements */}
       <div style={{
@@ -187,29 +186,6 @@ const Login = () => {
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.6rem' }}>
-          <motion.div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '1rem'
-            }}
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: 'spring', stiffness: 400 }}
-          >
-            <img
-              src="/mindpulse-logo.png"
-              alt="MindPulse Logo"
-              style={{
-                height: '80px',
-                width: 'auto',
-                objectFit: 'contain'
-              }}
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
-          </motion.div>
           <h2 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)' }}>Welcome Back</h2>
           <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
             Track your mental wellness journey
@@ -341,7 +317,7 @@ const Login = () => {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          margin: '2rem 0 1.5rem 0',
+          margin: '1.5rem 0',
           color: 'var(--text-muted)',
           fontSize: '0.9rem'
         }}>
@@ -350,28 +326,16 @@ const Login = () => {
           <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
         </div>
 
-        <Link to="/register" style={{ textDecoration: 'none', display: 'flex' }}>
-          <button type="button" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', gap: '0.5rem' }}>
-            Create Account <ArrowRight size={16} />
+        <Link to="/register" style={{ textDecoration: 'none' }}>
+          <button type="button" className="btn btn-secondary" style={{ width: '100%' }}>
+            Create an Account
           </button>
         </Link>
       </div>
 
       {/* Forgot Password Modal */}
       {showForgotPassword && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 2000,
-          backdropFilter: 'blur(5px)'
-        }}>
+        <div className="forgot-overlay">
           <div className="glass-card animate-in" style={{
             width: '100%',
             maxWidth: '420px',
