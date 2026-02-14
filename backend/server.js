@@ -21,6 +21,18 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/journal', require('./routes/journal'));
 app.use('/api/admin', require('./routes/admin'));
 
+// Simple health endpoint
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// Global handlers to surface otherwise-silent crashes in logs
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
 const PORT = process.env.PORT || 5000;
 
 if (require.main === module) {

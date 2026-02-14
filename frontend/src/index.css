@@ -703,3 +703,676 @@ textarea {
     .mini-brand { display: none }
     .login-logo { width: 64px; height: 64px }
 }
+
+/* ===== PROFILE PAGE STYLES ===== */
+.profile-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem !important;
+}
+
+.profile-header-section {
+    margin-bottom: 2.5rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.08), rgba(99, 102, 241, 0.04));
+    border-radius: 1.5rem;
+    border: 1px solid rgba(108, 92, 231, 0.1);
+}
+
+.profile-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.profile-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.profile-header-info h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-dark);
+}
+
+.profile-header-info .text-muted {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.profile-section {
+    margin-bottom: 2rem;
+    padding: 2rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.section-header svg {
+    color: var(--primary);
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.section-header h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem;
+}
+
+.section-description {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
+.form-group .input-field {
+    padding: 0.95rem 1.1rem;
+    border-radius: 0.8rem;
+    border: 1.5px solid rgba(15, 23, 42, 0.06);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group .input-field:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.12);
+}
+
+.password-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: -0.3rem 0 0 0;
+}
+
+.privacy-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    background: rgba(108, 92, 231, 0.04);
+    border-radius: 0.8rem;
+    border: 1px solid rgba(108, 92, 231, 0.06);
+}
+
+.privacy-content h3 {
+    margin: 0 0 0.3rem 0;
+    font-size: 1rem;
+    color: var(--text-dark);
+}
+
+.privacy-content .text-muted {
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 28px;
+}
+
+.switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+    background-color: var(--primary);
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}
+
+.form-actions .btn {
+    min-width: 160px;
+}
+
+.danger-zone {
+    border: 1.5px solid rgba(255, 107, 107, 0.1);
+    background: rgba(255, 107, 107, 0.02);
+}
+
+.danger-zone .section-header svg {
+    color: #ff6b6b;
+}
+
+.danger-zone .section-header {
+    color: #6b1820;
+}
+
+.danger-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.btn-secondary {
+    background: rgba(15, 23, 42, 0.04);
+    color: var(--text-dark);
+    border: 1.5px solid rgba(15, 23, 42, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(15, 23, 42, 0.08);
+    border-color: rgba(15, 23, 42, 0.12);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b, #fb7185);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.btn-danger:hover {
+    box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
+    transform: translateY(-2px);
+}
+
+/* ===== SUPPORT PAGE STYLES ===== */
+.support-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem !important;
+}
+
+.support-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2rem;
+    align-items: start;
+}
+
+.support-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.support-section {
+    padding: 2rem;
+}
+
+.support-section h2 {
+    margin: 0 0 0.5rem 0;
+}
+
+.section-description {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.rec-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.rec-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 0.8rem;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.05), rgba(99, 102, 241, 0.02));
+    border: 1px solid rgba(108, 92, 231, 0.08);
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+}
+
+.rec-item:hover {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.08), rgba(99, 102, 241, 0.04));
+    border-color: rgba(108, 92, 231, 0.12);
+    transform: translateX(4px);
+}
+
+.rec-bullet {
+    color: var(--primary);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: -3px;
+}
+
+.resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.resource-card {
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.04), rgba(99, 102, 241, 0.02));
+    border: 1px solid rgba(108, 92, 231, 0.08);
+    border-radius: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.resource-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(108, 92, 231, 0.1);
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.06), rgba(99, 102, 241, 0.04));
+}
+
+.resource-title {
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.resource-details {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.resource-details p {
+    margin: 0;
+}
+
+.motivation-section {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.06), rgba(99, 102, 241, 0.03));
+    border: 1px solid rgba(108, 92, 231, 0.08);
+}
+
+.motivation-section h2 {
+    margin-bottom: 1.5rem;
+}
+
+.motivation-quote {
+    font-size: 1.4rem;
+    font-style: italic;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 1rem 0;
+    padding: 1.5rem;
+    line-height: 1.8;
+}
+
+.motivation-text {
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 1rem 0 0 0;
+}
+
+.alert.high {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgba(255, 99, 132, 0.08), rgba(255, 107, 107, 0.04));
+    border: 1.5px solid rgba(255, 107, 107, 0.12);
+    color: #6b1820;
+    margin-bottom: 2rem;
+}
+
+.alert-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ff6b6b;
+    flex-shrink: 0;
+}
+
+.alert-content strong {
+    display: block;
+    font-size: 1.05rem;
+    margin-bottom: 0.4rem;
+}
+
+.alert-content p {
+    color: #6b1820;
+    margin: 0.5rem 0 0 0;
+    line-height: 1.6;
+}
+
+/* Breathing Guide Card */
+.breathing-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.breathing-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.breathing-icon {
+    color: var(--primary);
+    animation: floatY 3s ease-in-out infinite;
+}
+
+.breathing-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+}
+
+.breathing-description {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: -0.5rem 0 1rem 0;
+}
+
+.breathing-instructions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.breath-step {
+    padding: 0.8rem;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.06), rgba(99, 102, 241, 0.02));
+    border-radius: 0.6rem;
+    border: 1px solid rgba(108, 92, 231, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: all 0.3s ease;
+}
+
+.breath-step:hover {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.08), rgba(99, 102, 241, 0.04));
+}
+
+.step-number {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.step-text {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.breathing-actions {
+    display: flex;
+    gap: 0.6rem;
+}
+
+.breathing-actions .btn {
+    flex: 1;
+    padding: 0.65rem;
+    font-size: 0.9rem;
+}
+
+.support-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.quick-contacts, .resource-links {
+    padding: 1.25rem;
+}
+
+.quick-contacts h3, .resource-links h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.05rem;
+    color: var(--text-dark);
+}
+
+.quick-contact-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+}
+
+.quick-contact-item:last-child {
+    border-bottom: none;
+}
+
+.quick-contact-item svg {
+    color: var(--primary);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.contact-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-dark);
+}
+
+.contact-value {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.links-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.links-list li a {
+    display: block;
+    padding: 0.65rem 0.8rem;
+    text-decoration: none;
+    color: var(--text-dark);
+    border-radius: 0.6rem;
+    background: rgba(108, 92, 231, 0.04);
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.links-list li a:hover {
+    background: rgba(108, 92, 231, 0.1);
+    color: var(--primary);
+    transform: translateX(4px);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .support-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .support-sidebar {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        flex-direction: row;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-container,
+    .support-container {
+        padding: 1rem !important;
+    }
+
+    .profile-header-section,
+    .profile-section,
+    .support-section {
+        padding: 1.5rem;
+    }
+
+    .profile-header-info h1 {
+        font-size: 1.5rem;
+    }
+
+    .section-header {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .danger-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .resources-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .breathing-instructions {
+        grid-template-columns: 1fr;
+    }
+
+    .support-grid,
+    .support-sidebar {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-container,
+    .support-container {
+        padding: 0.75rem !important;
+    }
+
+    .profile-header-section,
+    .profile-section,
+    .support-section {
+        padding: 1rem;
+    }
+
+    .profile-header-info h1 {
+        font-size: 1.25rem;
+    }
+
+    .section-header svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .rec-item {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .breathing-actions .btn {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    .motivation-quote {
+        font-size: 1.1rem;
+        padding: 1rem;
+    }
+
+    .btn-danger,
+    .btn-secondary {
+        gap: 0.4rem;
+        font-size: 0.9rem;
+    }
+}

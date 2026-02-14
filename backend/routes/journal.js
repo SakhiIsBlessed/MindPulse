@@ -35,9 +35,12 @@ router.post('/', protect, async (req, res) => {
 
   try {
     // Call AI Service for sentiment analysis
-    const aiResponse = await axios.post('http://localhost:5001/analyze', {
-      text: content,
-    });
+    // Add a short timeout so a slow/failed AI service doesn't hang the request
+    const aiResponse = await axios.post(
+      'http://localhost:5001/analyze',
+      { text: content },
+      { timeout: 3000 }
+    );
     sentiment_polarity = aiResponse.data.polarity;
     sentiment_label = aiResponse.data.label;
   } catch (error) {

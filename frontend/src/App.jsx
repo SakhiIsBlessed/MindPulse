@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Journal from './pages/Journal';
 import Insights from './pages/Insights';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Support from './pages/Support';
 import Profile from './pages/Profile';
 
@@ -27,6 +28,7 @@ function AppContent() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      <Footer />
     </>
   );
 }

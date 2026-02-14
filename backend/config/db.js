@@ -17,11 +17,14 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('MySQL Connected');
     // Sync models (force: true drops and recreates tables to fix schema issues)
-    await sequelize.sync({ force: true });
-    console.log('Database synced');
+    // Use alter instead of force to avoid dropping tables on every start
+    await sequelize.sync({ alter: true });
+    console.log('Database synced (alter applied)');
   } catch (error) {
     console.error(`Error: ${error.message}`);
-    process.exit(1);
+    // Don't forcefully exit the process; log the error so the server can continue starting
+    // and we can surface errors to logs for debugging. If DB is required, consider
+    // exiting in production or retrying the connection here.
   }
 };
 
