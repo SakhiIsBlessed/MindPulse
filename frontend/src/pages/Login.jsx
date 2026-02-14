@@ -11,6 +11,7 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   // Forgot Password States
@@ -19,7 +20,6 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [forgotError, setForgotError] = useState('');
@@ -156,7 +156,8 @@ const Login = () => {
       minHeight: '100vh',
       width: '100vw',
       margin: 0,
-      padding: 0
+      padding: '2rem 1rem',
+      paddingTop: '4rem'
     }}>
       {/* Animated background elements */}
       <div style={{
@@ -178,27 +179,37 @@ const Login = () => {
         pointerEvents: 'none'
       }} />
 
-      <div className="glass-card animate-in" style={{ 
+      <div className="glass-card animate-in login-card" style={{ 
         width: '100%', 
         maxWidth: '420px',
         position: 'relative',
         zIndex: 1
       }}>
-        {/* Header with icon */}
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '60px',
-            height: '60px',
-            borderRadius: '1rem',
-            background: 'var(--gradient-primary)',
-            marginBottom: '1rem',
-            boxShadow: '0 6px 18px rgba(108,92,231,0.12)'
-          }}>
-            <Heart size={32} color="white" fill="white" />
-          </div>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '1.6rem' }}>
+          <motion.div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: 'spring', stiffness: 400 }}
+          >
+            <img
+              src="/mindpulse-logo.png"
+              alt="MindPulse Logo"
+              style={{
+                height: '80px',
+                width: 'auto',
+                objectFit: 'contain'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          </motion.div>
           <h2 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)' }}>Welcome Back</h2>
           <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
             Track your mental wellness journey
@@ -232,14 +243,7 @@ const Login = () => {
                 <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', opacity: 0.8 }}>
                   <button
                     onClick={() => setShowForgotPassword(true)}
-                    style={{ 
-                      color: '#fca5a5', 
-                      background: 'none',
-                      border: 'none',
-                      textDecoration: 'underline',
-                      cursor: 'pointer',
-                      fontWeight: '500'
-                    }}
+                    className="forgot-link forgot-inline"
                   >
                     Forgot your password?
                   </button>
@@ -290,7 +294,7 @@ const Login = () => {
 
           <div className="mb-4">
             <label htmlFor="password">Password</label>
-            <div style={{ position: 'relative' }}>
+            <div className="input-wrapper">
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
@@ -305,35 +309,17 @@ const Login = () => {
                 type="button"
                 onClick={() => setShowPassword(s => !s)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--text-muted)'
-                }}
+                className="password-toggle"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
 
-            <div style={{ marginTop: '0.5rem' }}>
+            <div className="forgot-container" style={{ marginTop: '0.35rem' }}>
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--primary)',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  textDecoration: 'underline',
-                  fontWeight: '600',
-                  padding: 0
-                }}
+                className="forgot-link"
               >
                 Forgot your password?
               </button>
@@ -343,7 +329,7 @@ const Login = () => {
           <button 
             type="submit" 
             className="btn btn-primary" 
-            style={{ width: '100%', marginTop: '1.5rem' }}
+            style={{ width: '100%', marginTop: '1rem' }}
             disabled={loading}
           >
             <LogIn size={20} style={{ marginRight: '0.5rem' }} />
@@ -355,7 +341,7 @@ const Login = () => {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          margin: '1.5rem 0',
+          margin: '2rem 0 1.5rem 0',
           color: 'var(--text-muted)',
           fontSize: '0.9rem'
         }}>
@@ -364,9 +350,9 @@ const Login = () => {
           <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
         </div>
 
-        <Link to="/register" style={{ textDecoration: 'none' }}>
-          <button type="button" className="btn btn-secondary" style={{ width: '100%' }}>
-            Create an Account
+        <Link to="/register" style={{ textDecoration: 'none', display: 'flex' }}>
+          <button type="button" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', gap: '0.5rem' }}>
+            Create Account <ArrowRight size={16} />
           </button>
         </Link>
       </div>
@@ -591,7 +577,7 @@ const Login = () => {
                 </p>
                 <div className="mb-4">
                   <label htmlFor="newPassword">New Password</label>
-                  <div style={{ position: 'relative' }}>
+                  <div className="input-wrapper">
                     <input
                       id="newPassword"
                       type={showNewPassword ? 'text' : 'password'}
@@ -606,16 +592,7 @@ const Login = () => {
                       type="button"
                       onClick={() => setShowNewPassword(s => !s)}
                       aria-label={showNewPassword ? 'Hide password' : 'Show password'}
-                      style={{
-                        position: 'absolute',
-                        right: '10px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--text-muted)'
-                      }}
+                      className="password-toggle"
                     >
                       {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -623,7 +600,7 @@ const Login = () => {
                 </div>
                 <div className="mb-4">
                   <label htmlFor="confirmPassword">Confirm Password</label>
-                  <div style={{ position: 'relative' }}>
+                  <div className="input-wrapper">
                     <input
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
@@ -638,16 +615,7 @@ const Login = () => {
                       type="button"
                       onClick={() => setShowConfirmPassword(s => !s)}
                       aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                      style={{
-                        position: 'absolute',
-                        right: '10px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--text-muted)'
-                      }}
+                      className="password-toggle"
                     >
                       {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>

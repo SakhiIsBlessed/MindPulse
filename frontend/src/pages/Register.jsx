@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { UserPlus, Heart, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Heart, AlertCircle, CheckCircle, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -45,7 +46,8 @@ const Register = () => {
       minHeight: '100vh',
       width: '100vw',
       margin: 0,
-      padding: 0
+      padding: '2rem 1rem',
+      paddingTop: '4rem'
     }}>
       {/* Animated background elements */}
       <div style={{
@@ -73,26 +75,35 @@ const Register = () => {
         position: 'relative',
         zIndex: 1
       }}>
-        {/* Header with icon */}
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '60px',
-            height: '60px',
-            borderRadius: '1rem',
-            background: 'var(--gradient-secondary)',
-            boxShadow: '0 6px 18px rgba(236,72,153,0.12)'
-          }}>
-            <UserPlus size={32} color="white" />
-          </div>
-          <div>
-            <h2 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-dark)' }}>Join MindPulse</h2>
-            <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
-              Create an account and start tracking your mood with beautiful insights.
-            </p>
-          </div>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '1.6rem' }}>
+          <motion.div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: 'spring', stiffness: 400 }}
+          >
+            <img
+              src="/mindpulse-logo.png"
+              alt="MindPulse Logo"
+              style={{
+                height: '80px',
+                width: 'auto',
+                objectFit: 'contain'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          </motion.div>
+          <h2 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-dark)' }}>Join MindPulse</h2>
+          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
+            Create an account and start tracking your mood with beautiful insights.
+          </p>
         </div>
 
         {/* Error Message - Professional styling */}
@@ -202,7 +213,7 @@ const Register = () => {
 
           <div className="mb-4">
             <label htmlFor="password">Password</label>
-            <div style={{ position: 'relative' }}>
+            <div className="input-wrapper">
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
@@ -217,16 +228,7 @@ const Register = () => {
                 type="button"
                 onClick={() => setShowPassword(s => !s)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--text-muted)'
-                }}
+                className="password-toggle"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -251,18 +253,18 @@ const Register = () => {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          margin: '1.5rem 0',
+          margin: '2rem 0 1.5rem 0',
           color: 'var(--text-muted)',
           fontSize: '0.9rem'
         }}>
           <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
-          <span style={{ margin: '0 1rem' }}>Already registered?</span>
+          <span style={{ margin: '0 1rem' }}>Already have an account?</span>
           <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
         </div>
 
-        <Link to="/login" style={{ textDecoration: 'none' }}>
-          <button type="button" className="btn btn-secondary" style={{ width: '100%' }}>
-            Go to Login
+        <Link to="/login" style={{ textDecoration: 'none', display: 'flex' }}>
+          <button type="button" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', gap: '0.5rem' }}>
+            Sign In <ArrowRight size={16} />
           </button>
         </Link>
       </div>
