@@ -72,9 +72,9 @@ const Login = () => {
     setForgotLoading(true);
 
     try {
-      const { data } = await axios.post('/api/auth/verify-otp', { 
+      const { data } = await axios.post('/api/auth/verify-otp', {
         email: forgotEmail,
-        otp 
+        otp
       });
       setResetToken(data.resetToken);
       setForgotSuccess('OTP verified! Now set your new password.');
@@ -149,10 +149,10 @@ const Login = () => {
   const isInvalidCredentials = error.toLowerCase().includes('invalid');
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
       minHeight: '100vh',
       width: '100vw',
       margin: 0,
@@ -178,23 +178,45 @@ const Login = () => {
         pointerEvents: 'none'
       }} />
 
-      <div className="glass-card animate-in login-card" style={{ 
-        width: '100%', 
+      <div className="glass-card animate-in login-card" style={{
+        width: '100%',
         maxWidth: '420px',
         position: 'relative',
         zIndex: 1
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.6rem' }}>
-          <h2 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)' }}>Welcome Back</h2>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 200 }}
+            style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}
+          >
+            <img
+              src="/mindpulse-logo.png"
+              alt="MindPulse Logo"
+              style={{
+                height: '60px',
+                width: 'auto',
+                borderRadius: '8px',
+                objectFit: 'contain'
+              }}
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </motion.div>
+
+          <h2 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)' }}>
+            Welcome Back
+          </h2>
           <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
             Track your mental wellness journey
           </p>
         </div>
 
+
         {/* Error Message - Professional styling */}
         {error && (
-          <div style={{ 
+          <div style={{
             background: 'rgba(248, 113, 113, 0.15)',
             border: '1.5px solid rgba(248, 113, 113, 0.4)',
             color: '#fca5a5',
@@ -231,7 +253,7 @@ const Login = () => {
 
         {/* Success Message */}
         {successMessage && (
-          <div style={{ 
+          <div style={{
             background: 'rgba(74, 222, 128, 0.15)',
             border: '1.5px solid rgba(74, 222, 128, 0.4)',
             color: '#86efac',
@@ -302,9 +324,9 @@ const Login = () => {
             </div>
           </div>
 
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
+          <button
+            type="submit"
+            className="btn btn-primary"
             style={{ width: '100%', marginTop: '1rem' }}
             disabled={loading}
           >

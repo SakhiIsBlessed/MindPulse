@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { UserPlus, Heart, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -73,8 +74,21 @@ const Register = () => {
         position: 'relative',
         zIndex: 1
       }}>
-        {/* Header */}
+        {/* Header with Logo */}
         <div style={{ textAlign: 'center', marginBottom: '1.6rem' }}>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 200 }}
+            style={{ marginBottom: '1rem', display: 'inline-flex' }}
+          >
+            <img
+              src="/mindpulse-logo.png"
+              alt="MindPulse Logo"
+              style={{ height: '60px', width: 'auto', borderRadius: '8px' }}
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </motion.div>
           <h2 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-dark)' }}>Join MindPulse</h2>
           <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
             Create an account and start tracking your mood with beautiful insights.
@@ -153,7 +167,7 @@ const Register = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username" style={{ color: '#0f172a' }}>Username</label>
             <input
               id="username"
               type="text"
@@ -164,13 +178,13 @@ const Register = () => {
               required
               disabled={loading}
             />
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>
+            <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
               This will be your unique profile name
             </p>
           </div>
 
           <div className="mb-4">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email" style={{ color: '#0f172a' }}>Email Address</label>
             <input
               id="email"
               type="email"
@@ -187,7 +201,7 @@ const Register = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password" style={{ color: '#0f172a' }}>Password</label>
             <div style={{ position: 'relative' }}>
               <input
                 id="password"
