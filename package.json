@@ -1,0 +1,21 @@
+{
+  "name": "mindpulse",
+  "version": "1.0.0",
+  "description": "MindPulse is a privacy-focused web application for student mental health monitoring, featuring daily journaling, mood tracking, and AI-powered sentiment analysis.",
+  "main": "index.js",
+  "scripts": {
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PrachiPawar018/MindPulse.git"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

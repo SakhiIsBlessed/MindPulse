@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, User, Home, FileText, BarChart2, LifeBuoy, LogOut, Menu, X, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Toast from './Toast';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: <Home size={16} /> },
@@ -12,24 +13,46 @@ const navItems = [
 
 const Navbar = ({ userName = 'Prachi' }) => {
   const [open, setOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
+
+  const doLogout = () => {
+    setToast({ message: 'Logged out — see you soon!', type: 'success' });
+    setTimeout(() => {
+      localStorage.clear();
+      navigate('/login');
+    }, 700);
+  };
 
   return (
     <header className="site-nav">
       <div className="nav-inner container">
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Link to="/dashboard" className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
-            <motion.img 
-              src="/mindpulse-logo.png" 
-              alt="MindPulse" 
-              style={{ height: 36, width: 'auto' }}
-              whileHover={{ rotate: 8, scale: 1.08 }} 
-              transition={{ type: 'spring', stiffness: 400 }}
-              onError={(e) => {
-                // Fallback to brain icon if image not found
-                e.target.style.display = 'none';
-              }}
-            />
+            {!imgError ? (
+              <motion.img
+                src="/mindpulse-logo.png"
+                alt="MindPulse"
+                style={{ height: 36, width: 'auto' }}
+                whileHover={{ rotate: 8, scale: 1.08 }}
+                transition={{ type: 'spring', stiffness: 400 }}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <motion.div whileHover={{ rotate: 8, scale: 1.03 }} transition={{ type: 'spring', stiffness: 400 }} style={{ height: 36, width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-hidden>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MindPulse logo">
+                  <defs>
+                    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#6c5ce7" />
+                      <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M12 2C8.134 2 5 5.134 5 9c0 3.866 3.134 7 7 7s7-3.134 7-7c0-3.866-3.134-7-7-7z" fill="url(#g1)" opacity="0.95" />
+                  <path d="M8.5 12.5c.7.7 2.5.7 3.2 0 .7-.7.7-2.5 0-3.2-.7-.7-2.5-.7-3.2 0-.7.7-.7 2.5 0 3.2z" fill="#fff" opacity="0.95" />
+                </svg>
+              </motion.div>
+            )}
             <div className="logo" style={{ fontWeight: 800, fontSize: '1.15rem', background: 'linear-gradient(135deg, #6c5ce7, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: 0, letterSpacing: '-0.5px' }}>MindPulse</div>
           </Link>
 
@@ -56,7 +79,7 @@ const Navbar = ({ userName = 'Prachi' }) => {
             <User />
           </motion.div>
 
-          <button className="btn-logout" onClick={() => { localStorage.clear(); navigate('/login'); }} title="Logout">
+          <button className="btn-logout" onClick={doLogout} title="Logout">
             <LogOut size={14} /> Logout
           </button>
 
@@ -81,6 +104,7 @@ const Navbar = ({ userName = 'Prachi' }) => {
           </motion.div>
         )}
       </AnimatePresence>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </header>
   );
 };

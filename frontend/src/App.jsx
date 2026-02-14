@@ -6,6 +6,8 @@ import Dashboard from './pages/Dashboard';
 import Journal from './pages/Journal';
 import Insights from './pages/Insights';
 import Navbar from './components/Navbar';
+import Support from './pages/Support';
+import Profile from './pages/Profile';
 
 function AppContent() {
   const location = useLocation();
@@ -21,6 +23,8 @@ function AppContent() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/journal" element={<Journal />} />
         <Route path="/insights" element={<Insights />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>

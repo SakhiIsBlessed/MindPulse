@@ -490,3 +490,20 @@ textarea {
         font-size: 0.9rem;
     }
 }
+
+/* Toast */
+.app-toast {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 24px;
+    background: rgba(16,24,40,0.95);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(2,6,23,0.4);
+    z-index: 9999;
+    font-weight: 600;
+}
+.app-toast.success { background: linear-gradient(90deg,#34d399,#60a5fa); color: #04202b }
+.app-toast.error { background: linear-gradient(90deg,#fb7185,#f97316); color: #fff }

@@ -24,8 +24,8 @@ const createTestTransporter = async () => {
 const getTransporter = async () => {
   if (transporterCache) return { transporter: transporterCache, isTest: transporterIsTest };
 
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
+  const emailUser = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : undefined;
+  const emailPass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : undefined;
 
   if (emailUser && emailPass) {
     transporterIsTest = false;
