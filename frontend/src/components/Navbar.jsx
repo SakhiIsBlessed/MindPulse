@@ -25,6 +25,8 @@ const Navbar = ({ userName = 'Prachi' }) => {
     }, 700);
   };
 
+  const initials = (userName || 'U').split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase();
+
   return (
     <header className="site-nav">
       <div className="nav-inner container">
@@ -76,7 +78,7 @@ const Navbar = ({ userName = 'Prachi' }) => {
           </motion.button>
 
           <motion.div className="avatar" whileHover={{ scale: 1.05 }} onClick={() => navigate('/profile')} title="Profile">
-            <User />
+            <div className="avatar-initials">{initials}</div>
           </motion.div>
 
           <button className="btn-logout" onClick={doLogout} title="Logout">

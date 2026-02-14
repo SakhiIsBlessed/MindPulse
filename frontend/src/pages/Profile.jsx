@@ -57,24 +57,36 @@ const Profile = ({ user = {} }) => {
     <motion.main className="page-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="glass-card">
         <h2>Account Settings</h2>
-        <form onSubmit={handleSave} className="form-grid">
-          <label>Username</label>
-          <input value={username} onChange={e => setUsername(e.target.value)} />
-
-          <label>Email</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} />
-
-          <label>Privacy</label>
+        <div className="profile-avatar">
+          <div className="avatar-initials">{(username || 'U').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
           <div>
-            <label className="switch">
-              <input type="checkbox" checked={privacy} onChange={e => setPrivacy(e.target.checked)} />
-              <span className="slider" />
-            </label>
+            <div style={{ fontWeight: 700, fontSize: '1rem' }}>{username || 'Username'}</div>
+            <div className="avatar-upload">Change profile photo (coming soon)</div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSave} className="form-grid" style={{ marginTop: '1rem' }}>
+          <div>
+            <label>Username</label>
+            <input className="input-field" value={username} onChange={e => setUsername(e.target.value)} />
+
+            <label>Email</label>
+            <input className="input-field" type="email" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
 
-          <div />
-          <div style={{ textAlign: 'right' }}>
-            <button className="btn" disabled={saving}>Save Changes</button>
+          <div>
+            <label>Privacy</label>
+            <div>
+              <label className="switch">
+                <input type="checkbox" checked={privacy} onChange={e => setPrivacy(e.target.checked)} />
+                <span className="slider" />
+              </label>
+            </div>
+
+            <div style={{ height: 8 }} />
+            <div style={{ textAlign: 'right' }}>
+              <button className="btn" disabled={saving}>Save Changes</button>
+            </div>
           </div>
         </form>
       </div>
@@ -82,11 +94,13 @@ const Profile = ({ user = {} }) => {
       <div className="glass-card">
         <h2>Change Password</h2>
         <form onSubmit={handleChangePassword} className="form-grid">
-          <label>Current Password</label>
-          <input type="password" value={oldPass} onChange={e => setOldPass(e.target.value)} />
+          <div>
+            <label>Current Password</label>
+            <input className="input-field" type="password" value={oldPass} onChange={e => setOldPass(e.target.value)} />
 
-          <label>New Password</label>
-          <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)} />
+            <label>New Password</label>
+            <input className="input-field" type="password" value={newPass} onChange={e => setNewPass(e.target.value)} />
+          </div>
 
           <div />
           <div style={{ textAlign: 'right' }}>

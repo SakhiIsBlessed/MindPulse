@@ -15,6 +15,62 @@
     --gradient-accent: linear-gradient(135deg, #06b6d4 0%, #34d399 100%);
 }
 
+/* --- Visual polish overrides (appended) --- */
+:root {
+        --radius: 12px;
+        --card-radius: 16px;
+        --shadow-1: 0 6px 20px rgba(15,23,42,0.06);
+        --shadow-2: 0 10px 40px rgba(15,23,42,0.08);
+        --muted: #7b8794;
+        --accent-glow: 0 8px 30px rgba(108,92,231,0.12);
+}
+
+/* Typography refinements */
+body { font-family: Inter, 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial; color: var(--text-dark); }
+h1 { letter-spacing: -1px; }
+h2 { letter-spacing: -0.4px; }
+
+/* Stronger, rounded cards */
+.glass-card { border-radius: var(--card-radius); box-shadow: var(--shadow-1); transition: transform 260ms cubic-bezier(.2,.9,.3,1), box-shadow 260ms ease; }
+.glass-card:hover { transform: translateY(-6px) scale(1.003); box-shadow: var(--shadow-2); }
+
+/* Buttons: smoother radius and micro-press */
+.btn { border-radius: calc(var(--radius) - 2px); transition: transform 180ms ease, box-shadow 180ms ease; }
+.btn:active { transform: translateY(1px) scale(0.997); }
+.btn-primary { box-shadow: var(--accent-glow); }
+
+/* Inputs: softer focus */
+.input-field { border-radius: 10px; box-shadow: none; }
+.input-field:focus { box-shadow: 0 10px 30px rgba(99,102,241,0.08); border-color: var(--primary); }
+
+/* Labels color to dark */
+label { color: var(--text-dark); }
+
+/* Navbar link active state */
+.nav-link.active, .nav-link:hover { color: var(--primary); background: rgba(108,92,231,0.06); box-shadow: var(--accent-glow); }
+
+/* Avatar initials styling */
+.avatar-initials { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; background:linear-gradient(135deg,#6c5ce7,#8b5cf6); box-shadow: 0 6px 18px rgba(108,92,231,0.18); }
+
+/* Floating subtle animation for highlights */
+.float-callout { animation: floatY 6s ease-in-out infinite; }
+@keyframes floatY { 0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)} }
+
+/* Card titles */
+.card-title { font-size:1rem; font-weight:700; margin-bottom:0.5rem; color:var(--text-dark) }
+
+/* Polished small utilities */
+.btn-row { display:flex; gap:0.6rem; }
+.contact-row { display:flex; gap:0.75rem; align-items:center; }
+
+/* Responsive adjustments */
+@media (max-width:880px) {
+    .nav-right .welcome { display:none }
+    .container { padding:1rem }
+}
+
+/* End visual polish overrides */
+
 * {
     box-sizing: border-box;
 }
@@ -507,3 +563,35 @@ textarea {
 }
 .app-toast.success { background: linear-gradient(90deg,#34d399,#60a5fa); color: #04202b }
 .app-toast.error { background: linear-gradient(90deg,#fb7185,#f97316); color: #fff }
+
+/* Page container spacing */
+.page-container { padding: 2rem; display: block; }
+
+/* Support page specifics */
+.rec-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.6rem; }
+.rec-list li { padding: 0.6rem 0.8rem; border-radius: 0.6rem; background: linear-gradient(180deg, rgba(108,92,231,0.04), rgba(99,102,241,0.02)); border: 1px solid rgba(108,92,231,0.04); color: var(--text-dark); }
+.contact-row { display:flex; gap:0.75rem; align-items:center; padding:0.6rem 0; color:var(--text-dark) }
+.contact-row svg { min-width: 20px; min-height:20px; color:var(--primary) }
+.motivation { font-style: italic; margin: 0.4rem 0; padding: 0.8rem; border-left: 3px solid rgba(108,92,231,0.12); background: rgba(108,92,231,0.02); border-radius: 0.5rem }
+.btn-row { display:flex; gap:0.6rem; margin-top:0.6rem }
+.glass-card.small { padding:1rem; border-radius:0.75rem }
+
+/* High risk alert */
+.alert.high { display:flex; gap:1rem; align-items:flex-start; padding:1rem; border-radius:0.75rem; background: linear-gradient(90deg, rgba(255,99,132,0.08), rgba(255, 239, 235, 0.04)); border:1px solid rgba(255,99,132,0.12); color: #6b1820 }
+.alert.high svg { color: #ff6b6b }
+
+/* Profile page styles */
+.form-grid { display:grid; grid-template-columns: 1fr 280px; gap:1rem; align-items:start }
+.form-grid label { color: var(--text-dark); margin-bottom:0.25rem }
+.form-grid input { width:100%; padding:0.8rem 0.9rem; border-radius:0.6rem; border:1px solid rgba(15,23,42,0.06); background:#fff }
+.profile-avatar { display:flex; gap:1rem; align-items:center }
+.avatar-initials { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; background:linear-gradient(135deg,#6c5ce7,#8b5cf6); box-shadow: 0 6px 18px rgba(108,92,231,0.18); font-size:1.05rem }
+.avatar-upload { font-size:0.9rem; color:var(--text-muted) }
+
+.btn-danger { background: linear-gradient(90deg,#ff6b6b,#fb7185); color: white; border:none }
+
+/* Make profile sections stack nicely on small screens */
+@media (max-width: 880px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .page-container { padding: 1rem }
+}

@@ -64,7 +64,8 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
             <div className="contact-row">
               <Phone /> <div>
                 <strong>Emergency Helpline</strong>
-                <div>1-800-123-4567 (24/7)</div>
+                <div>85309 32462 (24/7)</div>
+                <div>96073 40088 (24/7)</div>
               </div>
             </div>
           </div>
@@ -83,8 +84,8 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
 
           <div className="glass-card small">
             <h3>Quick Contacts</h3>
-            <div className="contact-row"><Phone /> <div>Local Helpline: 1-800-123-4567</div></div>
-            <div className="contact-row"><HeartHandshake /> <div>Peer Support: support@campus.edu</div></div>
+            <div className="contact-row"><Phone /> <div>Local Helpline: 85309 32462</div></div>
+            <div className="contact-row"><HeartHandshake /> <div>Peer Support: mindpulse1801@gmail.com</div></div>
           </div>
 
           <div className="glass-card small">
