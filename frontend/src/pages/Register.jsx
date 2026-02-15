@@ -25,6 +25,8 @@ const Register = () => {
       setSuccessMessage('Account created successfully! Redirecting...');
       setTimeout(() => {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.username);
+        localStorage.setItem('email', data.email);
         navigate('/dashboard');
       }, 1500);
     } catch (err) {
@@ -39,10 +41,10 @@ const Register = () => {
   const isEmailTaken = error.toLowerCase().includes('email');
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
       minHeight: '100vh',
       width: '100vw',
       margin: 0,
@@ -68,8 +70,8 @@ const Register = () => {
         pointerEvents: 'none'
       }} />
 
-      <div className="glass-card animate-in" style={{ 
-        width: '100%', 
+      <div className="glass-card animate-in" style={{
+        width: '100%',
         maxWidth: '420px',
         position: 'relative',
         zIndex: 1
@@ -97,12 +99,12 @@ const Register = () => {
 
         {/* Error Message - Professional styling */}
         {error && (
-          <div style={{ 
-            background: isAlreadyRegistered 
+          <div style={{
+            background: isAlreadyRegistered
               ? 'rgba(248, 113, 113, 0.15)'
               : 'rgba(248, 113, 113, 0.15)',
-            border: `1.5px solid ${isAlreadyRegistered 
-              ? 'rgba(248, 113, 113, 0.4)' 
+            border: `1.5px solid ${isAlreadyRegistered
+              ? 'rgba(248, 113, 113, 0.4)'
               : 'rgba(248, 113, 113, 0.4)'}`,
             color: '#fca5a5',
             padding: '1rem',
@@ -124,10 +126,10 @@ const Register = () => {
               </p>
               {isAlreadyRegistered && (
                 <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', opacity: 0.8 }}>
-                  <Link 
-                    to="/login" 
-                    style={{ 
-                      color: '#fca5a5', 
+                  <Link
+                    to="/login"
+                    style={{
+                      color: '#fca5a5',
                       textDecoration: 'underline',
                       cursor: 'pointer',
                       fontWeight: '500'
@@ -143,7 +145,7 @@ const Register = () => {
 
         {/* Success Message */}
         {successMessage && (
-          <div style={{ 
+          <div style={{
             background: 'rgba(74, 222, 128, 0.15)',
             border: '1.5px solid rgba(74, 222, 128, 0.4)',
             color: '#86efac',
@@ -236,9 +238,9 @@ const Register = () => {
             </p>
           </div>
 
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
+          <button
+            type="submit"
+            className="btn btn-primary"
             style={{ width: '100%', marginTop: '1.5rem' }}
             disabled={loading}
           >

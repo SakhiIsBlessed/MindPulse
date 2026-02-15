@@ -32,14 +32,20 @@ const Login = () => {
     setError('');
     setSuccessMessage('');
     setLoading(true);
+    console.log('Attempting login with:', { email, password });
     try {
       const { data } = await axios.post('/api/auth/login', { email, password });
+      console.log('Login successful:', data);
       setSuccessMessage('Login successful! Redirecting...');
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('username', data.username);
+      localStorage.setItem('email', data.email);
       setTimeout(() => {
-        localStorage.setItem('token', data.token);
+        setLoading(false);
         navigate('/dashboard');
       }, 1500);
     } catch (err) {
+      console.error('Login error:', err);
       const errorMessage = err.response?.data?.message || 'Login failed';
       setError(errorMessage);
       setLoading(false);

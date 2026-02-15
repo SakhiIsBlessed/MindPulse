@@ -1,9 +1,54 @@
-import React, { useState } from 'react';
-import { AlertTriangle, LifeBuoy, Phone, HeartHandshake, Wind, Brain } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertTriangle, LifeBuoy, Phone, HeartHandshake, Wind, Brain, Plus, X, Edit2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
 
 const BreathingGuide = () => {
   const [isBreathing, setIsBreathing] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const audioRef = React.useRef(null);
+
+  const handlePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play();
+        setIsPlaying(true);
+        setIsBreathing(true);
+      }
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setIsBreathing(false);
+    setCurrentTime(0);
+  };
+
+  const formatTime = (time) => {
+    if (!time || isNaN(time)) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
+  const progressPercent = duration ? (currentTime / duration) * 100 : 0;
 
   return (
     <motion.div className="glass-card breathing-card small" whileHover={{ scale: 1.02 }}>
@@ -12,7 +57,7 @@ const BreathingGuide = () => {
         <h3>Box Breathing Guide</h3>
       </div>
       <p className="breathing-description">60-second calming exercise</p>
-      
+
       <div className="breathing-instructions">
         <div className="breath-step">
           <div className="step-number">1</div>
@@ -31,21 +76,424 @@ const BreathingGuide = () => {
           <div className="step-text">Hold for 4 seconds</div>
         </div>
       </div>
-      
+
+      {/* Audio Player */}
+      <audio
+        ref={audioRef}
+        src="/box-breathing-guide.mp3"
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+      />
+
+      {isPlaying && (
+        <div className="audio-progress-bar" style={{ marginBottom: '0.75rem' }}>
+          <div
+            className="progress-fill"
+            style={{
+              width: `${progressPercent}%`,
+              height: '4px',
+              backgroundColor: '#8b5cf6',
+              borderRadius: '2px'
+            }}
+          />
+        </div>
+      )}
+
+      {isPlaying && (
+        <div className="audio-time-display" style={{
+          fontSize: '0.75rem',
+          color: '#a0aec0',
+          textAlign: 'center',
+          marginBottom: '0.75rem'
+        }}>
+          {formatTime(currentTime)} / {formatTime(duration)}
+        </div>
+      )}
+
       <div className="breathing-actions">
-        <button 
+        <button
           className={`btn ${isBreathing ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => {
             setIsBreathing(!isBreathing);
-            alert(isBreathing ? 'Breathing exercise ended' : 'Start breathing: inhale...');
+            if (!isBreathing) {
+              alert('Take slow, deep breaths. Follow the 4-4-4-4 pattern.');
+            }
           }}
         >
-          {isBreathing ? 'Stop' : 'Start'}
+          {isBreathing ? '⏸ Pause' : '⏵ Breathe'}
         </button>
-        <button className="btn btn-secondary" onClick={() => alert('Guided audio coming soon!')}>
-          🎵 Audio
+        <button
+          className={`btn ${isPlaying ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={handlePlayPause}
+        >
+          {isPlaying ? '⏸ Pause' : '🎵 Play Guide'}
         </button>
       </div>
+    </motion.div>
+  );
+};
+
+const EmergencyContact = ({ isHighRisk = false }) => {
+  const [emergencyContacts, setEmergencyContacts] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({ name: '', phone: '', relation: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch contacts from database on mount
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = getAuthToken();
+
+      if (!token) {
+        setEmergencyContacts([]);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/user/emergency-contacts', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEmergencyContacts(data);
+      } else if (response.status === 401) {
+        setEmergencyContacts([]);
+      } else {
+        throw new Error(`Failed to fetch contacts: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error('Error fetching emergency contacts:', err);
+      setError(err.message);
+      setEmergencyContacts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add or update contact
+  const handleSaveContact = async () => {
+    if (!formData.name || !formData.phone || !formData.relation) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert('Please log in first');
+        return;
+      }
+
+      let response;
+
+      if (editingId) {
+        // Update existing
+        response = await fetch(`/api/user/emergency-contacts/${editingId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+      } else {
+        // Add new
+        response = await fetch('/api/user/emergency-contacts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+      }
+
+      if (response.ok) {
+        await fetchContacts();
+        setFormData({ name: '', phone: '', relation: '' });
+        setEditingId(null);
+        setShowForm(false);
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.message}`);
+      }
+    } catch (err) {
+      console.error('Error saving contact:', err);
+      alert(`Error saving contact: ${err.message}`);
+    }
+  };
+
+  // Delete contact
+  const handleDeleteContact = async (id) => {
+    if (window.confirm('Remove this emergency contact?')) {
+      try {
+        const token = getAuthToken();
+        const response = await fetch(`/api/user/emergency-contacts/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          await fetchContacts();
+        } else {
+          const error = await response.json();
+          alert(`Error: ${error.message}`);
+        }
+      } catch (err) {
+        console.error('Error deleting contact:', err);
+        alert(`Error deleting contact: ${err.message}`);
+      }
+    }
+  };
+
+  // Start editing
+  const handleEditContact = (contact) => {
+    setFormData({ name: contact.name, phone: contact.phone, relation: contact.relation });
+    setEditingId(contact.id);
+    setShowForm(true);
+  };
+
+  // Make call
+  const handleCall = (phone) => {
+    window.location.href = `tel:${phone}`;
+  };
+
+  return (
+    <motion.div className="glass-card emergency-contact-card small" whileHover={{ scale: 1.02 }}>
+      <div className="emergency-header">
+        <Phone size={24} className="emergency-icon" style={{ color: '#ef4444' }} />
+        <h3>Emergency Contact</h3>
+      </div>
+
+      {error && (
+        <div style={{ padding: '0.5rem', backgroundColor: '#fee2e2', borderRadius: '0.375rem', marginBottom: '0.75rem' }}>
+          <p style={{ fontSize: '0.875rem', color: '#991b1b' }}>⚠️ Error loading contacts</p>
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '1rem' }}>
+          <p style={{ color: '#a0aec0' }}>Loading contacts...</p>
+        </div>
+      ) : emergencyContacts.length === 0 ? (
+        <div className="no-contact-state">
+          <p className="no-contact-text">No emergency contact set up yet</p>
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              setShowForm(true);
+              setEditingId(null);
+              setFormData({ name: '', phone: '', relation: '' });
+            }}
+          >
+            <Plus size={16} /> Add Contact
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Display Emergency Contacts */}
+          <div className="emergency-contacts-list">
+            {emergencyContacts.map((contact) => (
+              <motion.div
+                key={contact.id}
+                className="emergency-contact-item"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="contact-info">
+                  <div className="contact-name">{contact.name}</div>
+                  <div className="contact-relation" style={{ fontSize: '0.75rem', color: '#a0aec0' }}>
+                    {contact.relation}
+                  </div>
+                </div>
+
+                <div className="contact-actions">
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleCall(contact.phone)}
+                    title={`Call ${contact.name}`}
+                  >
+                    <Phone size={16} /> Call
+                  </button>
+                  <button
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => handleEditContact(contact)}
+                    title="Edit"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleDeleteContact(contact.id)}
+                    title="Delete"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Add Another Contact Button */}
+          {emergencyContacts.length > 0 && (
+            <button
+              className="btn btn-secondary btn-block"
+              onClick={() => {
+                setShowForm(true);
+                setEditingId(null);
+                setFormData({ name: '', phone: '', relation: '' });
+              }}
+              style={{ marginTop: '0.75rem' }}
+            >
+              <Plus size={16} /> Add Another
+            </button>
+          )}
+        </>
+      )}
+
+      {/* Form Modal (rendered via portal to avoid stacking issues) */}
+      {showForm && createPortal(
+        <motion.div
+          className="form-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => {
+            setShowForm(false);
+            setEditingId(null);
+            setFormData({ name: '', phone: '', relation: '' });
+          }}
+        >
+          <motion.div
+            className="form-modal"
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="form-header">
+              <h4>{editingId ? 'Edit Emergency Contact' : 'Add Emergency Contact'}</h4>
+              <button
+                className="btn-close"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingId(null);
+                  setFormData({ name: '', phone: '', relation: '' });
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="form-body">
+              <div className="form-group">
+                <label>Name *</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Mom, Best Friend"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Phone Number *</label>
+                <input
+                  type="tel"
+                  placeholder="e.g., +1-555-0123"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Relation *</label>
+                <select
+                  value={formData.relation}
+                  onChange={(e) => setFormData({ ...formData, relation: e.target.value })}
+                >
+                  <option value="">-- Select --</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Friend">Friend</option>
+                  <option value="Partner">Partner</option>
+                  <option value="Counselor">Counselor</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="form-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingId(null);
+                    setFormData({ name: '', phone: '', relation: '' });
+                  }}
+                >
+                  Cancel
+                </button>
+                <button className="btn btn-primary" onClick={handleSaveContact}>
+                  {editingId ? 'Update' : 'Add'} Contact
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>,
+        document.body
+      )}
+
+      {/* High Risk Alert with Call CTA */}
+      {isHighRisk && emergencyContacts.length > 0 && (
+        <motion.div
+          className="high-risk-alert"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            marginTop: '0.75rem',
+            padding: '0.75rem',
+            backgroundColor: '#fee2e2',
+            borderRadius: '0.5rem',
+            border: '1px solid #fca5a5'
+          }}
+        >
+          <p style={{ fontSize: '0.875rem', color: '#991b1b', marginBottom: '0.5rem' }}>
+            ⚠️ Reach out to your emergency contact now
+          </p>
+          {emergencyContacts.slice(0, 1).map((contact) => (
+            <button
+              key={contact.id}
+              className="btn btn-danger btn-block"
+              onClick={() => handleCall(contact.phone)}
+              style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                padding: '0.5rem'
+              }}
+            >
+              📞 Call {contact.name} Now
+            </button>
+          ))}
+        </motion.div>
+      )}
     </motion.div>
   );
 };
@@ -72,9 +520,9 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
   };
 
   return (
-    <motion.main 
+    <motion.main
       className="page-container support-container"
-      initial={{ opacity: 0 }} 
+      initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       variants={containerVariants}
     >
@@ -102,10 +550,10 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
                 <p className="section-description">Personalized suggestions based on your mood entries</p>
               </div>
             </div>
-            
+
             <ul className="rec-list">
               {aiRec.map((r, i) => (
-                <motion.li 
+                <motion.li
                   key={i}
                   className="rec-item"
                   initial={{ opacity: 0, x: -10 }}
@@ -156,7 +604,7 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
             </blockquote>
             <p className="motivation-text">Remember that recovery and wellbeing is a journey. Be kind to yourself.</p>
             <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-              <button 
+              <button
                 className="btn btn-primary"
                 onClick={() => alert('You have the strength to get through this. One day at a time! 💪')}
               >
@@ -170,6 +618,9 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
         <aside className="support-sidebar">
           {/* Breathing Guide */}
           <BreathingGuide />
+
+          {/* Emergency Contact */}
+          <EmergencyContact isHighRisk={isHigh} />
 
           {/* Quick Contacts */}
           <motion.div className="glass-card quick-contacts small" variants={cardVariants}>

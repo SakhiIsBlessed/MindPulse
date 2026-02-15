@@ -20,7 +20,7 @@ const JournalEntry = sequelize.define(
     },
     content: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: true,
     },
     mood_score: {
       type: DataTypes.INTEGER,
@@ -30,6 +30,10 @@ const JournalEntry = sequelize.define(
         max: 5,
       },
     },
+    audio_url: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     sentiment_polarity: {
       type: DataTypes.FLOAT,
       allowNull: true,
@@ -37,6 +41,38 @@ const JournalEntry = sequelize.define(
     sentiment_label: {
       type: DataTypes.STRING, // 'positive', 'neutral', 'negative'
       allowNull: true,
+    },
+    tags: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: '[]',
+      get() {
+        const val = this.getDataValue('tags');
+        return val ? JSON.parse(val) : [];
+      },
+      set(val) {
+        this.setDataValue('tags', JSON.stringify(val || []));
+      },
+    },
+    transcription: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    voice_note: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    attachments: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: '[]',
+      get() {
+        const val = this.getDataValue('attachments');
+        return val ? JSON.parse(val) : [];
+      },
+      set(val) {
+        this.setDataValue('attachments', JSON.stringify(val || []));
+      },
     },
   },
   {

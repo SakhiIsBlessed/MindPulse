@@ -1,23 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { User, Lock, AlertCircle, Download } from 'lucide-react';
+import { getGravatarUrl } from '../utils/gravatar';
 
 const Profile = ({ user = {} }) => {
   const [username, setUsername] = useState(user.username || '');
   const [email, setEmail] = useState(user.email || '');
   const [oldPass, setOldPass] = useState('');
   const [newPass, setNewPass] = useState('');
-  const [privacy, setPrivacy] = useState(user.privateAccount || false);
   const [saving, setSaving] = useState(false);
   const [changingPass, setChangingPass] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const storedUsername = localStorage.getItem('username');
+
+        if (!token) return;
+
+        // First, try to get from localStorage
+        if (storedUsername) {
+          setUsername(storedUsername);
+        }
+
+        // Fetch full user data from backend
+        const config = {
+          headers: { Authorization: `Bearer ${token}` },
+        };
+        const { data } = await axios.get('/api/user/profile', config);
+        setUsername(data.username || storedUsername);
+        setEmail(data.email);
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       if (!username || !email) return alert('Username and email required');
-      await axios.post('/api/user/update', { username, email, privacy });
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+      await axios.post('/api/user/update', { username, email }, config);
+      localStorage.setItem('username', username);
       alert('Profile updated');
     } catch (err) {
       console.error(err);
@@ -33,8 +69,12 @@ const Profile = ({ user = {} }) => {
     if (newPass.length < 8) return alert('New password must be 8+ chars');
     setChangingPass(true);
     try {
-      await axios.post('/api/user/change-password', { oldPass, newPass });
-      setOldPass(''); 
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+      await axios.post('/api/user/change-password', { oldPass, newPass }, config);
+      setOldPass('');
       setNewPass('');
       alert('Password changed successfully');
     } catch (err) {
@@ -48,7 +88,11 @@ const Profile = ({ user = {} }) => {
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
     try {
-      await axios.post('/api/user/delete');
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+      await axios.post('/api/user/delete', {}, config);
       localStorage.clear();
       window.location.href = '/login';
     } catch (err) {
@@ -71,17 +115,34 @@ const Profile = ({ user = {} }) => {
   };
 
   return (
-    <motion.main 
+    <motion.main
       className="page-container profile-container"
-      initial={{ opacity: 0 }} 
+      initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       variants={containerVariants}
     >
       {/* Profile Header */}
       <motion.div className="profile-header-section" variants={cardVariants}>
         <div className="profile-header-content">
-          <div>
-            <div className="avatar-initials">{(username || 'U').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
+          <div style={{ position: 'relative' }}>
+            <img
+              src={getGravatarUrl(email, 200)}
+              alt={username}
+              style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '3px solid var(--primary)',
+                boxShadow: '0 4px 12px rgba(108, 92, 231, 0.2)'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+            {!email && (
+              <div className="avatar-initials">{(username || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}</div>
+            )}
           </div>
           <div className="profile-header-info">
             <h1>{username || 'Your Profile'}</h1>
@@ -99,15 +160,15 @@ const Profile = ({ user = {} }) => {
             <p className="section-description">Manage your profile details and account settings</p>
           </div>
         </div>
-        
+
         <form onSubmit={handleSave} className="profile-form">
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="username">Username</label>
-              <input 
+              <input
                 id="username"
-                className="input-field" 
-                value={username} 
+                className="input-field"
+                value={username}
                 onChange={e => setUsername(e.target.value)}
                 placeholder="Enter your username"
               />
@@ -115,26 +176,15 @@ const Profile = ({ user = {} }) => {
 
             <div className="form-group">
               <label htmlFor="email">Email Address</label>
-              <input 
+              <input
                 id="email"
-                className="input-field" 
-                type="email" 
-                value={email} 
+                className="input-field"
+                type="email"
+                value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="Enter your email"
               />
             </div>
-          </div>
-
-          <div className="privacy-section">
-            <div className="privacy-content">
-              <h3>Privacy Settings</h3>
-              <p className="text-muted">Make your account private to control who can see your journal entries</p>
-            </div>
-            <label className="switch">
-              <input type="checkbox" checked={privacy} onChange={e => setPrivacy(e.target.checked)} />
-              <span className="slider" />
-            </label>
           </div>
 
           <div className="form-actions">
@@ -159,11 +209,11 @@ const Profile = ({ user = {} }) => {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="oldPass">Current Password</label>
-              <input 
+              <input
                 id="oldPass"
-                className="input-field" 
-                type="password" 
-                value={oldPass} 
+                className="input-field"
+                type="password"
+                value={oldPass}
                 onChange={e => setOldPass(e.target.value)}
                 placeholder="Enter current password"
               />
@@ -171,11 +221,11 @@ const Profile = ({ user = {} }) => {
 
             <div className="form-group">
               <label htmlFor="newPass">New Password</label>
-              <input 
+              <input
                 id="newPass"
-                className="input-field" 
-                type="password" 
-                value={newPass} 
+                className="input-field"
+                type="password"
+                value={newPass}
                 onChange={e => setNewPass(e.target.value)}
                 placeholder="Enter new password (min. 8 characters)"
               />
@@ -202,15 +252,15 @@ const Profile = ({ user = {} }) => {
         </div>
 
         <div className="danger-actions">
-          <button 
-            className="btn btn-secondary" 
+          <button
+            className="btn btn-secondary"
             onClick={() => alert('Export not implemented')}
           >
             <Download size={18} />
             Export Data
           </button>
-          <button 
-            className="btn btn-danger" 
+          <button
+            className="btn btn-danger"
             onClick={handleDelete}
           >
             <AlertCircle size={18} />

@@ -9,6 +9,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Support from './pages/Support';
 import Profile from './pages/Profile';
+import Home from './pages/Home';
 
 function AppContent() {
   const location = useLocation();
@@ -26,6 +27,7 @@ function AppContent() {
         <Route path="/insights" element={<Insights />} />
         <Route path="/support" element={<Support />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <Footer />

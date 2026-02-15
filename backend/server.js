@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const path = require('path');
 
 // Load env vars FIRST before requiring db
 dotenv.config();
@@ -15,10 +16,13 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/journal', require('./routes/journal'));
+app.use('/api/user', require('./routes/user'));
 app.use('/api/admin', require('./routes/admin'));
 
 // Simple health endpoint

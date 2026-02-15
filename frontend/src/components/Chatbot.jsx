@@ -29,14 +29,96 @@ const Chatbot = () => {
     setInput('');
 
     // Simulate bot response
-    setTimeout(() => {
-      const botMsg = { 
-        id: Date.now() + 1, 
-        text: "Thanks for sharing. Remember to log your mood in the journal! I'm here to listen.", 
-        sender: 'bot' 
-      };
-      setMessages(prev => [...prev, botMsg]);
-    }, 1000);
+    // Simulate smart bot response
+setTimeout(() => {
+  const userText = input.toLowerCase().trim();
+  let reply = "";
+
+  // Greetings
+  if (/(^|\s)(hi|hello|hey|hii|heyy)(\s|$)/.test(userText)) {
+    reply = "Hello 😊 I'm your MindPulse assistant. How are you feeling today?";
+  }
+
+  // Asking how bot is
+  else if (userText.includes("how are you")) {
+    reply = "I'm doing great 🤖 and ready to support you 💜 How are *you* feeling right now?";
+  }
+
+  // User introduces name
+  else if (userText.includes("my name is")) {
+    const name = userText.split("my name is")[1].trim();
+    const formatted = name.charAt(0).toUpperCase() + name.slice(1);
+    reply = `Nice to meet you, ${formatted} 😊 I'm here for you.`;
+  }
+
+  // Asking bot name
+  else if (userText.includes("your name") || userText.includes("who are you")) {
+    reply = "I'm MindPulse AI 🤖 — your personal mental wellness companion.";
+  }
+
+  // Asking what bot can do
+  else if (userText.includes("what can you do") || userText.includes("help me")) {
+    reply = "I can help you track moods, journal feelings, stay motivated, and understand your emotions 💜";
+  }
+
+  // Feeling sad
+  else if (userText.includes("sad") || userText.includes("upset") || userText.includes("depressed") || userText.includes("lonely")) {
+    reply = "I'm sorry you're feeling this way 💜 You're not alone. Want to write about it in your journal?";
+  }
+
+  // Feeling anxious
+  else if (userText.includes("anxious") || userText.includes("anxiety") || userText.includes("worried") || userText.includes("nervous")) {
+    reply = "Take a slow deep breath 🌿 You're safe right now. Want to try writing your thoughts to feel lighter?";
+  }
+
+  // Feeling happy
+  else if (userText.includes("happy") || userText.includes("good") || userText.includes("great") || userText.includes("excited")) {
+    reply = "That's wonderful to hear 😊 Keep nurturing what makes you feel good!";
+  }
+
+  // Feeling tired or stressed
+  else if (userText.includes("tired") || userText.includes("stress") || userText.includes("overwhelmed")) {
+    reply = "It sounds like you’ve been carrying a lot 💜 Try pausing for a moment and taking a few deep breaths.";
+  }
+
+  // Motivation
+  else if (userText.includes("motivate") || userText.includes("motivation")) {
+    reply = "You are stronger than you think 💪 Start small, stay consistent, and celebrate tiny wins.";
+  }
+
+  // Thank you
+  else if (userText.includes("thank")) {
+    reply = "You're always welcome 💜 I'm here anytime you need support.";
+  }
+
+  // Bye
+  else if (userText.includes("bye") || userText.includes("goodnight") || userText.includes("see you")) {
+    reply = "Take care 💜 I'm here whenever you need to talk.";
+  }
+
+  // Asking time/date
+  else if (userText.includes("time")) {
+    reply = `Right now it's ${new Date().toLocaleTimeString()}. Take a moment to breathe 😊`;
+  }
+
+  else if (userText.includes("date") || userText.includes("day")) {
+    reply = `Today is ${new Date().toLocaleDateString()}. A fresh day for a fresh start 🌿`;
+  }
+
+  // Default response
+  else {
+    reply = "I'm here to listen 💜 You can share your thoughts, feelings, or log your mood anytime.";
+  }
+
+  const botMsg = {
+    id: Date.now() + 1,
+    text: reply,
+    sender: "bot",
+  };
+
+  setMessages(prev => [...prev, botMsg]);
+}, 800);
+
   };
 
   return (

@@ -4,8 +4,8 @@ import axios from 'axios';
 
 const EntryList = ({ entries, onDelete }) => {
   if (!entries || entries.length === 0) return (
-    <div style={{ 
-      textAlign: 'center', 
+    <div style={{
+      textAlign: 'center',
       padding: '2rem 1rem',
       color: 'var(--text-muted)'
     }}>
@@ -15,19 +15,23 @@ const EntryList = ({ entries, onDelete }) => {
   );
 
   const handleDelete = async (id) => {
-      if(window.confirm('Delete this entry?')) {
-          try {
-             const token = localStorage.getItem('token');
-             await axios.delete(`/api/journal/${id}`, {
-                 headers: { Authorization: `Bearer ${token}` }
-             });
-             // Basic reload for now, ideally pass a refresh callback
-             window.location.reload();
-          } catch(err) {
-              console.error(err);
-              alert('Failed to delete');
-          }
+    if (window.confirm('Delete this entry?')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`/api/journal/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        // Call optional refresh callback to avoid full reload
+        if (typeof onDelete === 'function') {
+          onDelete(id);
+        } else {
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete');
       }
+    }
   }
 
   const moodEmojis = ['😔', '😐', '😌', '😊', '😄'];
@@ -42,10 +46,10 @@ const EntryList = ({ entries, onDelete }) => {
       {entries.map((entry, idx) => {
         const sentiment = entry.sentiment_analysis?.label || 'neutral';
         const colors = sentimentColors[sentiment] || sentimentColors.neutral;
-        
+
         return (
-          <div 
-            key={entry._id} 
+          <div
+            key={entry._id}
             style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--glass-border)',
@@ -71,69 +75,69 @@ const EntryList = ({ entries, onDelete }) => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Calendar size={16} style={{ color: 'var(--text-muted)' }} />
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                    {new Date(entry.createdAt).toLocaleDateString(undefined, { 
-                      weekday: 'short', 
-                      month: 'short', 
-                      day: 'numeric' 
-                    })}
+                  {new Date(entry.createdAt).toLocaleDateString(undefined, {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 {/* Sentiment Badge */}
-                <div 
-                    style={{ 
-                        padding: '0.35rem 0.75rem', 
-                        borderRadius: '0.75rem', 
-                        fontSize: '0.75rem',
-                        fontWeight: '600',
-                        backgroundColor: colors.bg,
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                    }}
+                <div
+                  style={{
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: '0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    backgroundColor: colors.bg,
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}
                 >
                   {sentiment}
                 </div>
-                
+
                 {/* Mood Emoji */}
                 <div style={{ fontSize: '1.2rem' }}>
                   {moodEmojis[Math.max(0, Math.min(4, entry.mood_score - 1))]}
                 </div>
 
                 {/* Delete Button */}
-                <button 
-                    onClick={() => handleDelete(entry._id)}
-                    style={{ 
-                      background: 'none', 
-                      border: 'none', 
-                      color: 'var(--text-muted)', 
-                      cursor: 'pointer', 
-                      padding: '0.25rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      transition: 'all 0.2s',
-                      opacity: 0.7
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = '#f87171';
-                      e.currentTarget.style.opacity = '1';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'var(--text-muted)';
-                      e.currentTarget.style.opacity = '0.7';
-                    }}
-                    title="Delete Entry"
+                <button
+                  onClick={() => handleDelete(entry._id)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    transition: 'all 0.2s',
+                    opacity: 0.7
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#f87171';
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.opacity = '0.7';
+                  }}
+                  title="Delete Entry"
                 >
-                    <Trash2 size={18} />
+                  <Trash2 size={18} />
                 </button>
               </div>
             </div>
 
             {/* Content */}
-            <p style={{ 
-              lineHeight: '1.6', 
-              margin: '0.75rem 0', 
+            <p style={{
+              lineHeight: '1.6',
+              margin: '0.75rem 0',
               color: 'var(--text-dark)',
               fontSize: '0.95rem',
               overflow: 'hidden',
@@ -144,21 +148,28 @@ const EntryList = ({ entries, onDelete }) => {
               {entry.content}
             </p>
 
+            {/* Audio playback if available */}
+            {entry.audio_url && (
+              <div style={{ marginTop: '0.75rem' }}>
+                <audio controls src={entry.audio_url} style={{ width: '100%' }} />
+              </div>
+            )}
+
             {/* Mood Score Indicator */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem' }}>
               <div style={{ display: 'flex', gap: '3px' }}>
-                  {[...Array(5)].map((_, i) => (
-                      <div 
-                          key={i} 
-                          style={{ 
-                              width: '6px', 
-                              height: '6px', 
-                              borderRadius: '50%', 
-                                backgroundColor: i < entry.mood_score ? 'var(--primary)' : '#e6edf6',
-                              transition: 'all 0.3s ease'
-                          }} 
-                      />
-                  ))}
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      backgroundColor: i < entry.mood_score ? 'var(--primary)' : '#e6edf6',
+                      transition: 'all 0.3s ease'
+                    }}
+                  />
+                ))}
               </div>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 Mood: {entry.mood_score}/5
