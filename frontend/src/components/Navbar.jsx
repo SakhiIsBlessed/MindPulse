@@ -168,15 +168,15 @@ const Navbar = ({ userName = 'User' }) => {
           <Link to="/dashboard" className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
             {!imgError ? (
               <motion.img
-                src="/mindpulse-logo.png"
+                src="/Images/mindpulse-logo.svg"
                 alt="MindPulse"
-                style={{ height: 36, width: 'auto' }}
-                whileHover={{ rotate: 8, scale: 1.08 }}
-                transition={{ type: 'spring', stiffness: 400 }}
+                style={{ height: 40, width: 'auto' }}
+                whileHover={{ rotate: 8, scale: 1.06 }}
+                transition={{ type: 'spring', stiffness: 360 }}
                 onError={() => setImgError(true)}
               />
             ) : (
-              <motion.div whileHover={{ rotate: 8, scale: 1.03 }} transition={{ type: 'spring', stiffness: 400 }} style={{ height: 36, width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-hidden>
+              <motion.div whileHover={{ rotate: 8, scale: 1.03 }} transition={{ type: 'spring', stiffness: 360 }} style={{ height: 36, width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-hidden>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MindPulse logo">
                   <defs>
                     <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">

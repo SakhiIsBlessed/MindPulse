@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MindPulse logo: rounded diamond with pulse line and purple gradient -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="MindPulse logo">
+  <defs>
+    <linearGradient id="mpGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6c5ce7"/>
+      <stop offset="60%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ff6bcb"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="18" flood-color="#6c5ce7" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- background rounded diamond -->
+  <g filter="url(#soft)">
+    <rect x="28" y="28" width="200" height="200" rx="36" ry="36" transform="rotate(45 128 128)" fill="url(#mpGrad)" />
+  </g>
+
+  <!-- subtle inner highlight -->
+  <rect x="52" y="52" width="152" height="152" rx="28" ry="28" transform="rotate(45 128 128)" fill="rgba(255,255,255,0.06)" />
+
+  <!-- stylized pulse line -->
+  <path d="M44 132 L84 132 L100 108 L116 160 L136 92 L156 140 L212 140" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.98" transform="rotate(45 128 128) translate(0,-18)" />
+
+</svg>

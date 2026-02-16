@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const Song = require('../models/Song');
-const authMiddleware = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -59,7 +59,7 @@ const upload = multer({
 });
 
 // GET all songs for current user
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
     const songs = await Song.find({ userId: req.user.id })
       .select('-filename')
@@ -72,7 +72,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // POST upload a new song
-router.post('/', authMiddleware, upload.single('song'), async (req, res) => {
+router.post('/', protect, upload.single('song'), async (req, res) => {
   try {
     console.log('Upload attempt - User:', req.user?.id);
     console.log('File received:', req.file ? `${req.file.filename} (${req.file.size} bytes)` : 'No file');
@@ -128,7 +128,7 @@ router.use((error, req, res, next) => {
 });
 
 // DELETE a song
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', protect, async (req, res) => {
   try {
     const song = await Song.findOne({ _id: req.params.id, userId: req.user.id });
     if (!song) {
