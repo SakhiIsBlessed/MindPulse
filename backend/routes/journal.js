@@ -58,8 +58,13 @@ router.post('/', protect, uploadMulti, async (req, res) => {
   try {
     const { content, mood_score, tags, transcription } = req.body;
 
-    if (!content || !mood_score) {
-      return res.status(400).json({ message: 'Please provide content and mood score' });
+    // Require mood_score but allow either text content or an uploaded voice_note
+    if (!mood_score) {
+      return res.status(400).json({ message: 'Please provide mood score' });
+    }
+    const hasVoice = req.files && req.files.voice_note && req.files.voice_note.length > 0;
+    if (!content && !hasVoice) {
+      return res.status(400).json({ message: 'Please provide content or a voice note' });
     }
 
     let sentiment_polarity = 0;

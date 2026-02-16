@@ -44,12 +44,12 @@ const EntryList = ({ entries, onDelete }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {entries.map((entry, idx) => {
-        const sentiment = entry.sentiment_analysis?.label || 'neutral';
+        const sentiment = entry.sentiment_label || entry.sentiment_analysis?.label || 'neutral';
         const colors = sentimentColors[sentiment] || sentimentColors.neutral;
 
         return (
           <div
-            key={entry._id}
+            key={entry.id || entry._id || idx}
             style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--glass-border)',
@@ -107,7 +107,7 @@ const EntryList = ({ entries, onDelete }) => {
 
                 {/* Delete Button */}
                 <button
-                  onClick={() => handleDelete(entry._id)}
+                  onClick={() => handleDelete(entry.id || entry._id)}
                   style={{
                     background: 'none',
                     border: 'none',
@@ -149,9 +149,9 @@ const EntryList = ({ entries, onDelete }) => {
             </p>
 
             {/* Audio playback if available */}
-            {entry.audio_url && (
+            {(entry.voice_note || entry.audio_url) && (
               <div style={{ marginTop: '0.75rem' }}>
-                <audio controls src={entry.audio_url} style={{ width: '100%' }} />
+                <audio controls src={entry.voice_note || entry.audio_url} style={{ width: '100%' }} />
               </div>
             )}
 

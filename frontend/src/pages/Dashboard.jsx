@@ -133,14 +133,17 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const form = new FormData();
-      form.append('audio', blob, 'journal_audio.webm');
+      // backend expects the file field to be named 'voice_note' on POST /api/journal
+      form.append('voice_note', blob, 'journal_audio.webm');
       // optional text content and mood
       if (content) form.append('content', content);
       form.append('mood_score', moodScore);
       const config = {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+        // Let the browser set the Content-Type with the proper boundary
+        headers: { Authorization: `Bearer ${token}` },
       };
-      await axios.post('/api/journal/audio', form, config);
+      // use the main journal create route which accepts multipart uploads
+      await axios.post('/api/journal', form, config);
       // reset text input after uploading
       setContent('');
       setMoodScore(3);
