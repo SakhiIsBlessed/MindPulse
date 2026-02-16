@@ -5,7 +5,7 @@ import MoodChart from '../components/MoodChart';
 import EntryList from '../components/EntryList';
 import Chatbot from '../components/Chatbot';
 import { motion } from 'framer-motion';
-import { LogOut, Heart, TrendingUp, Zap, Mic, StopCircle } from 'lucide-react';
+import { LogOut, Heart, TrendingUp, Zap, Mic, StopCircle, Lightbulb, AlertCircle, Target, Activity, Bell, Clock, X } from 'lucide-react';
 
 const Dashboard = () => {
   const [entries, setEntries] = useState([]);
@@ -32,6 +32,15 @@ const Dashboard = () => {
     try { return JSON.parse(localStorage.getItem('mp_activity')) || []; } catch { return []; }
   });
   const [activityInput, setActivityInput] = useState({ date: '', sleep: '', exercise: '', journaled: false });
+  // Reminders & Notifications
+  const [reminders, setReminders] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mp_reminders')) || []; } catch { return []; }
+  });
+  const [notifications, setNotifications] = useState([]);
+  const [reminderText, setReminderText] = useState('');
+  const [reminderTime, setReminderTime] = useState('08:00');
+  const [showReminderForm, setShowReminderForm] = useState(false);
+  const notificationTimeoutRef = useRef({});
   const navigate = useNavigate();
 
   const fetchEntries = async () => {
@@ -60,6 +69,13 @@ const Dashboard = () => {
   useEffect(() => {
     fetchEntries();
   }, [navigate]);
+
+  // Cleanup notification timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(notificationTimeoutRef.current).forEach(timeout => clearTimeout(timeout));
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -267,18 +283,62 @@ const Dashboard = () => {
     const newGoals = { ...goals, ...g };
     setGoals(newGoals);
     localStorage.setItem('mp_goals', JSON.stringify(newGoals));
+    
+    // Show encouragement
+    const goalKeys = Object.keys(g);
+    if (goalKeys.includes('sleep')) showNotification(`🎯 Sleep goal updated to ${g.sleep}h`, 'success');
+    if (goalKeys.includes('exercise')) showNotification(`🎯 Exercise goal updated to ${g.exercise}min/week`, 'success');
+    if (goalKeys.includes('journaling')) showNotification(`🎯 Journaling goal updated to ${g.journaling}d/week`, 'success');
   };
 
   const addActivityLog = (log) => {
     const list = [log, ...activityLogs].slice(0,365);
     setActivityLogs(list);
     localStorage.setItem('mp_activity', JSON.stringify(list));
+    
+    // Trigger real-time feedback based on progress
+    const last7 = (new Date()); last7.setDate(last7.getDate()-6);
+    const weekLogs = list.filter(l => new Date(l.date) >= last7);
+    const avgSleep = weekLogs.length ? (weekLogs.reduce((s,l)=>s+(l.sleep||0),0)/weekLogs.length) : 0;
+    const totalExercise = weekLogs.reduce((s,l)=>s+(l.exercise||0),0);
+    const journalingDays = weekLogs.filter(l=>l.journaled).length;
+    
+    const sleepProg = Math.min(100, Math.round((avgSleep / (goals.sleep||8))*100));
+    const exerciseProg = Math.min(100, Math.round((totalExercise / (goals.exercise||30))*100));
+    const journalProg = Math.min(100, Math.round((journalingDays / (goals.journaling||3))*100));
+    
+    if (journalProg === 100) {
+      showNotification('🎉 Journaling goal complete this week!', 'success');
+    } else if (exerciseProg === 100) {
+      showNotification('💪 Exercise goal complete this week!', 'success');
+    } else if (sleepProg === 100) {
+      showNotification('😴 Sleep goal complete this week!', 'success');
+    }
   };
 
   const handleAddActivity = (e) => {
     e.preventDefault();
     if (!activityInput.date) return alert('Choose a date');
-    addActivityLog({ date: activityInput.date, sleep: Number(activityInput.sleep)||0, exercise: Number(activityInput.exercise)||0, journaled: !!activityInput.journaled });
+    
+    const activityLog = { 
+      date: activityInput.date, 
+      sleep: Number(activityInput.sleep)||0, 
+      exercise: Number(activityInput.exercise)||0, 
+      journaled: !!activityInput.journaled 
+    };
+    
+    addActivityLog(activityLog);
+    
+    // Show encouragement notifications
+    let encouragements = [];
+    if (activityLog.sleep > 0) encouragements.push(`😴 ${activityLog.sleep}h sleep logged!`);
+    if (activityLog.exercise > 0) encouragements.push(`🏃 ${activityLog.exercise}min exercise!`);
+    if (activityLog.journaled) encouragements.push('📝 Great journaling today!');
+    
+    if (encouragements.length > 0) {
+      showNotification(`✅ ${encouragements.join(' • ')}`, 'success');
+    }
+    
     setActivityInput({ date:'', sleep:'', exercise:'', journaled:false });
   };
 
@@ -303,6 +363,69 @@ const Dashboard = () => {
       setTimeout(() => new Notification('MindPulse Reminder', { body: text }), mins*60*1000);
       alert(`Reminder scheduled in ${mins} minute(s)`);
     });
+  };
+
+  // Enhanced reminder management
+  const addCustomReminder = () => {
+    if (!reminderText.trim()) return alert('Enter a reminder message');
+    if (!reminderTime) return alert('Select a time');
+    const newReminder = {
+      id: Date.now(),
+      message: reminderText,
+      time: reminderTime,
+      type: 'custom',
+      enabled: true,
+      createdAt: new Date().toISOString()
+    };
+    const updated = [...reminders, newReminder];
+    setReminders(updated);
+    localStorage.setItem('mp_reminders', JSON.stringify(updated));
+    setReminderText('');
+    setReminderTime('08:00');
+    setShowReminderForm(false);
+    showNotification(`✅ Reminder added for ${reminderTime}`, 'success');
+  };
+
+  const deleteReminder = (id) => {
+    const updated = reminders.filter(r => r.id !== id);
+    setReminders(updated);
+    localStorage.setItem('mp_reminders', JSON.stringify(updated));
+    showNotification('🗑️ Reminder removed', 'info');
+  };
+
+  const toggleReminder = (id) => {
+    const updated = reminders.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r);
+    setReminders(updated);
+    localStorage.setItem('mp_reminders', JSON.stringify(updated));
+  };
+
+  const showNotification = (message, type = 'info') => {
+    const id = Date.now();
+    const notification = { id, message, type };
+    setNotifications(prev => [...prev, notification]);
+    
+    // Auto remove after 4 seconds
+    if (notificationTimeoutRef.current[id]) {
+      clearTimeout(notificationTimeoutRef.current[id]);
+    }
+    notificationTimeoutRef.current[id] = setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      delete notificationTimeoutRef.current[id];
+    }, 4000);
+  };
+
+  const getEncouragementMessage = () => {
+    const progress = computeGoalProgress();
+    if (progress.journaling === 100) return "🎉 You've crushed your journaling goal!";
+    if (progress.exercise === 100) return "💪 Amazing exercise effort!";
+    if (progress.sleep === 100) return "😴 Great sleep consistency!";
+    if (progress.journaling >= 75) return "📝 Almost there on journaling!";
+    if (progress.exercise >= 75) return "🏃 Keep up the great work!";
+    if (progress.sleep >= 75) return "✨ You're doing fantastic!";
+    if (activityLogs.length > 0 && activityLogs[0].date === new Date().toISOString().split('T')[0]) {
+      return "🌟 Great start today!";
+    }
+    return "💪 Let's build those habits!";
   };
 
   if (loading) return (
@@ -336,6 +459,62 @@ const Dashboard = () => {
 
   return (
     <div>
+      {/* Notification Toast Container */}
+      <div style={{
+        position: 'fixed',
+        top: '1.5rem',
+        right: '1.5rem',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem'
+      }}>
+        {notifications.map(notif => (
+          <motion.div
+            key={notif.id}
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              padding: '1rem 1.25rem',
+              borderRadius: 12,
+              background: notif.type === 'success' 
+                ? 'linear-gradient(135deg, #10b981, #34d399)'
+                : notif.type === 'error'
+                ? 'linear-gradient(135deg, #ef4444, #f87171)'
+                : 'linear-gradient(135deg, #6c5ce7, #8b5cf6)',
+              color: 'white',
+              fontWeight: 600,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+              minWidth: '280px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '1rem'
+            }}
+          >
+            <span>{notif.message}</span>
+            <button
+              onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                padding: '0.25rem',
+                borderRadius: 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={18} />
+            </button>
+          </motion.div>
+        ))}
+      </div>
+
       <motion.main initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
         {/* Personalized Greeting */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} style={{ marginBottom: '2rem' }}>
@@ -348,7 +527,7 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Header */}
-        <div className="glass-card animate-in" style={{
+        {/* <div className="glass-card animate-in" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -369,7 +548,7 @@ const Dashboard = () => {
             <LogOut size={20} />
             Logout
           </button>
-        </div>
+        </div> */}
 
         {/* Stats Cards */}
         <div style={{
@@ -465,130 +644,740 @@ const Dashboard = () => {
         </div>
 
         {/* Insights & Alerts */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-          <div className="glass-card animate-in" style={{ padding: '1.25rem', borderRadius: 12, boxShadow: '0 6px 18px rgba(16,24,40,0.06)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+          {/* Intelligent Insights Card */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="glass-card animate-in" 
+            style={{ 
+              padding: '1.5rem', 
+              borderRadius: 16, 
+              boxShadow: '0 8px 24px rgba(108,92,231,0.12)',
+              background: 'linear-gradient(135deg, rgba(108,92,231,0.08) 0%, rgba(139,92,246,0.04) 100%)',
+              border: '1px solid rgba(108,92,231,0.2)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                background: 'linear-gradient(135deg, #6c5ce7, #8b5cf6)',
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '1.5rem'
+              }}>
+                <Lightbulb size={24} />
+              </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Intelligent Insights</h3>
-                <small style={{ color: 'var(--text-muted)' }}>Patterns & nudges based on your recent entries</small>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-dark)' }}>Intelligent Insights</h3>
+                <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>Patterns from your entries</small>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn" onClick={fetchEntries} title="Refresh insights" style={{ padding: '0.4rem 0.6rem' }}>Refresh</button>
-              </div>
+              <button 
+                className="btn" 
+                onClick={fetchEntries} 
+                title="Refresh insights" 
+                style={{ 
+                  padding: '0.5rem 0.75rem', 
+                  marginLeft: 'auto',
+                  fontSize: '0.85rem',
+                  background: 'rgba(108,92,231,0.1)',
+                  color: '#6c5ce7'
+                }}
+              >
+                Refresh
+              </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div style={{ padding: 12, borderRadius: 10, background: 'linear-gradient(180deg, rgba(108,92,231,0.04), rgba(108,92,231,0.02))' }}>
-                <strong style={{ display: 'block', marginBottom: 6 }}>Weekday Patterns</strong>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Weekday Patterns */}
+              <div style={{ 
+                padding: '1rem', 
+                borderRadius: 12, 
+                background: 'linear-gradient(135deg, rgba(108,92,231,0.06) 0%, rgba(139,92,246,0.03) 100%)',
+                border: '1px solid rgba(108,92,231,0.15)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '1.1rem' }}>📅</span>
+                  <strong style={{ color: 'var(--text-dark)' }}>Weekday Patterns</strong>
+                </div>
                 {insights.drops && insights.drops.length > 0 ? (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{insights.drops.map(d => <span key={d.day} className="tag">{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.day]}</span>)}</div>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {insights.drops.map(d => (
+                      <span key={d.day} style={{
+                        background: 'linear-gradient(135deg, #6c5ce7, #8b5cf6)',
+                        color: 'white',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: 8,
+                        fontSize: '0.85rem',
+                        fontWeight: 600
+                      }}>
+                        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.day]}
+                      </span>
+                    ))}
+                  </div>
                 ) : (
-                  <div style={{ color: 'var(--text-muted)' }}>No strong weekday mood drops detected.</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>✨ No strong mood drops detected.</div>
                 )}
               </div>
 
-              <div style={{ padding: 12, borderRadius: 10, background: 'linear-gradient(180deg, rgba(16,185,129,0.04), rgba(16,185,129,0.02))' }}>
-                <strong style={{ display: 'block', marginBottom: 6 }}>Journaling Impact</strong>
+              {/* Journaling Impact */}
+              <div style={{ 
+                padding: '1rem', 
+                borderRadius: 12, 
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(52,211,153,0.03) 100%)',
+                border: '1px solid rgba(16,185,129,0.15)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '1.1rem' }}>📝</span>
+                  <strong style={{ color: 'var(--text-dark)' }}>Journaling Impact</strong>
+                </div>
                 {insights.avgWith != null ? (
                   <div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 600 }}>{insights.avgWith.toFixed(1)}</div>
-                    <div style={{ color: 'var(--text-muted)' }}>Average on journaling entries (overall {insights.avgOverall.toFixed(1)})</div>
-                    {insights.avgWith > insights.avgOverall && <div style={{ marginTop: 6, color: 'var(--text-muted)' }}>Journaling appears to be associated with slightly higher mood.</div>}
-                  </div>
-                ) : <div style={{ color: 'var(--text-muted)' }}>No data yet.</div>}
-              </div>
-            </div>
-
-            <div style={{ marginTop: 12 }}>
-              <strong>Possible triggers</strong>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>{insights.triggers && insights.triggers.length ? insights.triggers.map(t => <span key={t} className="tag">{t}</span>) : <span style={{ color: 'var(--text-muted)' }}>No clear triggers detected.</span>}</div>
-            </div>
-          </div>
-
-          <div className="glass-card animate-in" style={{ padding: '1rem', borderRadius: 12, boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1rem' }}>Alerts</h3>
-                <small style={{ color: 'var(--text-muted)' }}>Timely support when you need it</small>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 10 }}>
-              {alerts.length === 0 && <div style={{ color: 'var(--text-muted)' }}>No alerts right now.</div>}
-              {alerts.map((a, i) => (
-                <div key={i} style={{ marginTop: 10, padding: 12, borderRadius: 10, display: 'flex', gap: 10, alignItems: 'center', background: a.type === 'danger' ? 'rgba(255,240,240,0.9)' : 'rgba(255,250,240,0.9)' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: a.type === 'danger' ? '#ffefef' : '#fff7ed' }}>
-                    {a.type === 'danger' ? '⚠️' : '💬'}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600 }}>{a.type === 'danger' ? 'Take care' : 'Support tip'}</div>
-                    <div style={{ color: 'var(--text-muted)', marginTop: 4 }}>{a.message}</div>
-                    <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                      <button className="btn btn-secondary" onClick={() => { document.querySelector('audio[src$="box-breathing-guide.mp3"]')?.play(); }}>Start Breathing</button>
-                      <button className="btn" onClick={() => window.location.href = '/support'}>Get Support</button>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981', marginBottom: '0.25rem' }}>
+                      {insights.avgWith.toFixed(1)}
                     </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                      Average mood on journaling days (overall {insights.avgOverall.toFixed(1)})
+                    </div>
+                    {insights.avgWith > insights.avgOverall && (
+                      <div style={{ marginTop: '0.5rem', color: '#10b981', fontSize: '0.9rem', fontWeight: 500 }}>
+                        ↑ Journaling boosts your mood
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Keep journaling to see insights</div>
+                )}
+              </div>
+
+              {/* Possible Triggers */}
+              <div style={{ 
+                padding: '1rem', 
+                borderRadius: 12, 
+                background: 'linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(251,146,60,0.03) 100%)',
+                border: '1px solid rgba(245,158,11,0.15)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '1.1rem' }}>🎯</span>
+                  <strong style={{ color: 'var(--text-dark)' }}>Possible Triggers</strong>
+                </div>
+                {insights.triggers && insights.triggers.length > 0 ? (
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {insights.triggers.map(t => (
+                      <span key={t} style={{
+                        background: 'linear-gradient(135deg, #f59e0b, #fb923c)',
+                        color: 'white',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: 8,
+                        fontSize: '0.85rem',
+                        fontWeight: 600
+                      }}>
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>No clear triggers detected yet</div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Alerts Card */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="glass-card animate-in" 
+            style={{ 
+              padding: '1.5rem', 
+              borderRadius: 16, 
+              boxShadow: '0 8px 24px rgba(239,68,68,0.08)',
+              background: 'linear-gradient(135deg, rgba(239,68,68,0.05) 0%, rgba(249,115,22,0.03) 100%)',
+              border: '1px solid rgba(239,68,68,0.15)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                background: 'linear-gradient(135deg, #ef4444, #f97316)',
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '1.5rem'
+              }}>
+                <AlertCircle size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-dark)' }}>Alerts & Support</h3>
+                <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>Stay supported always</small>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {alerts.length === 0 ? (
+                <div style={{
+                  padding: '1.5rem',
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(52,211,153,0.04) 100%)',
+                  border: '1px solid rgba(16,185,129,0.15)',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>✨</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                    You're doing great! No alerts right now.
                   </div>
                 </div>
-              ))}
+              ) : (
+                alerts.map((a, i) => (
+                  <div 
+                    key={i} 
+                    style={{ 
+                      padding: '1rem', 
+                      borderRadius: 12, 
+                      background: a.type === 'danger' 
+                        ? 'linear-gradient(135deg, rgba(255,87,87,0.08) 0%, rgba(255,127,80,0.04) 100%)'
+                        : 'linear-gradient(135deg, rgba(255,193,7,0.08) 0%, rgba(255,152,0,0.04) 100%)',
+                      border: a.type === 'danger' 
+                        ? '1px solid rgba(255,87,87,0.15)'
+                        : '1px solid rgba(255,193,7,0.15)',
+                      display: 'flex', 
+                      gap: '1rem'
+                    }}
+                  >
+                    <div style={{ fontSize: '1.5rem' }}>
+                      {a.type === 'danger' ? '⚠️' : '💡'}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-dark)' }}>
+                        {a.type === 'danger' ? 'Take Care' : 'Support Tip'}
+                      </div>
+                      <div style={{ color: 'var(--text-muted)', marginTop: '0.25rem', fontSize: '0.9rem' }}>
+                        {a.message}
+                      </div>
+                      <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                        <button 
+                          className="btn btn-secondary" 
+                          onClick={() => { document.querySelector('audio[src$="box-breathing-guide.mp3"]')?.play(); }}
+                          style={{ fontSize: '0.85rem', padding: '0.4rem 0.75rem' }}
+                        >
+                          🧘 Breathe
+                        </button>
+                        <button 
+                          className="btn" 
+                          onClick={() => window.location.href = '/support'}
+                          style={{ fontSize: '0.85rem', padding: '0.4rem 0.75rem', background: a.type === 'danger' ? '#ef4444' : '#f59e0b', color: 'white' }}
+                        >
+                          Get Support
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Goals & Habits Tracker */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-          <div className="glass-card animate-in" style={{ padding: '1.25rem', borderRadius: 12, boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
-            <h3 style={{ marginTop: 0 }}>Goals & Habits</h3>
-            <small style={{ color: 'var(--text-muted)' }}>Set simple weekly targets to build consistency</small>
-            <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
-              <label style={{ fontSize: 13 }}>Sleep target (hours)</label>
-              <input type="number" value={goals.sleep} onChange={e => saveGoals({ sleep: Number(e.target.value) })} style={{ padding: '8px', borderRadius: 8 }} />
-              <label style={{ fontSize: 13 }}>Exercise target (minutes / week)</label>
-              <input type="number" value={goals.exercise} onChange={e => saveGoals({ exercise: Number(e.target.value) })} style={{ padding: '8px', borderRadius: 8 }} />
-              <label style={{ fontSize: 13 }}>Journaling target (days / week)</label>
-              <input type="number" value={goals.journaling} onChange={e => saveGoals({ journaling: Number(e.target.value) })} style={{ padding: '8px', borderRadius: 8 }} />
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <button className="btn btn-secondary" onClick={() => scheduleReminder(60, 'Time to journal!')}>Remind in 1h</button>
-                <button className="btn" onClick={() => scheduleReminder(24*60, 'Daily reflection time')}>Daily Reminder</button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+          {/* Goals Card */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="glass-card animate-in" 
+            style={{ 
+              padding: '1.5rem', 
+              borderRadius: 16, 
+              boxShadow: '0 8px 24px rgba(139,92,246,0.12)',
+              background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(167,139,250,0.04) 100%)',
+              border: '1px solid rgba(139,92,246,0.2)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '1.5rem'
+              }}>
+                <Target size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-dark)' }}>Goals & Habits</h3>
+                <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>Weekly targets for consistency</small>
               </div>
             </div>
-          </div>
 
-          <div className="glass-card animate-in" style={{ padding: '1.25rem', borderRadius: 12, boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
-            <h3 style={{ marginTop: 0 }}>Log Activity</h3>
-            <small style={{ color: 'var(--text-muted)' }}>Track sleep, exercise and whether you journaled</small>
-            <form onSubmit={handleAddActivity} style={{ display: 'grid', gap: 8, marginTop: 10 }}>
-              <input type="date" value={activityInput.date} onChange={e => setActivityInput(s=>({ ...s, date: e.target.value }))} style={{ padding: 8, borderRadius: 8 }} />
-              <input placeholder="Sleep hours" value={activityInput.sleep} onChange={e => setActivityInput(s=>({ ...s, sleep: e.target.value }))} style={{ padding: 8, borderRadius: 8 }} />
-              <input placeholder="Exercise minutes" value={activityInput.exercise} onChange={e => setActivityInput(s=>({ ...s, exercise: e.target.value }))} style={{ padding: 8, borderRadius: 8 }} />
-              <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}><input type="checkbox" checked={activityInput.journaled} onChange={e => setActivityInput(s=>({ ...s, journaled: e.target.checked }))} /> Journaled today</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-primary" type="submit">Add</button>
-                <button type="button" className="btn" onClick={() => { setActivityInput({ date:'', sleep:'', exercise:'', journaled:false }); }}>Clear</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Sleep Goal */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <label style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-dark)' }}>😴 Sleep target (hours)</label>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#8b5cf6' }}>{goals.sleep}</span>
+                </div>
+                <input 
+                  type="number" 
+                  value={goals.sleep} 
+                  onChange={e => saveGoals({ sleep: Number(e.target.value) })} 
+                  style={{ 
+                    padding: '0.75rem', 
+                    borderRadius: 10,
+                    width: '100%',
+                    border: '1px solid rgba(139,92,246,0.3)',
+                    background: 'rgba(139,92,246,0.05)',
+                    color: 'var(--text-dark)'
+                  }} 
+                />
               </div>
 
-              <div style={{ marginTop: 6 }}>
-                <strong>Progress (7d)</strong>
-                <div style={{ marginTop: 8, display: 'grid', gap: 8 }}>
+              {/* Exercise Goal */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <label style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-dark)' }}>🏃 Exercise (min/week)</label>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#f97316' }}>{goals.exercise}</span>
+                </div>
+                <input 
+                  type="number" 
+                  value={goals.exercise} 
+                  onChange={e => saveGoals({ exercise: Number(e.target.value) })} 
+                  style={{ 
+                    padding: '0.75rem', 
+                    borderRadius: 10,
+                    width: '100%',
+                    border: '1px solid rgba(249,115,22,0.3)',
+                    background: 'rgba(249,115,22,0.05)',
+                    color: 'var(--text-dark)'
+                  }} 
+                />
+              </div>
+
+              {/* Journaling Goal */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <label style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-dark)' }}>📔 Journaling (days/week)</label>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#10b981' }}>{goals.journaling}</span>
+                </div>
+                <input 
+                  type="number" 
+                  value={goals.journaling} 
+                  onChange={e => saveGoals({ journaling: Number(e.target.value) })} 
+                  style={{ 
+                    padding: '0.75rem', 
+                    borderRadius: 10,
+                    width: '100%',
+                    border: '1px solid rgba(16,185,129,0.3)',
+                    background: 'rgba(16,185,129,0.05)',
+                    color: 'var(--text-dark)'
+                  }} 
+                />
+              </div>
+
+              {/* Encouragement Message */}
+              <div style={{
+                padding: '1rem',
+                borderRadius: 12,
+                background: 'linear-gradient(135deg, rgba(251,146,60,0.1) 0%, rgba(239,68,68,0.05) 100%)',
+                border: '1px solid rgba(251,146,60,0.2)',
+                textAlign: 'center',
+                marginTop: '0.5rem'
+              }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
+                  {getEncouragementMessage().split(' ')[0]}
+                </div>
+                <div style={{ color: 'var(--text-dark)', fontWeight: 600, fontSize: '0.95rem' }}>
+                  {getEncouragementMessage()}
+                </div>
+              </div>
+
+              {/* Quick Reminders & Custom Reminders */}
+              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(139,92,246,0.2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <label style={{ fontWeight: 700, color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Bell size={18} /> Reminders ({reminders.length})
+                  </label>
+                  <button
+                    onClick={() => setShowReminderForm(!showReminderForm)}
+                    style={{
+                      background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    {showReminderForm ? '✕ Cancel' : '+ Add Reminder'}
+                  </button>
+                </div>
+
+                {/* Custom Reminder Form */}
+                {showReminderForm && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    style={{
+                      padding: '1rem',
+                      background: 'rgba(139,92,246,0.05)',
+                      border: '1px solid rgba(139,92,246,0.2)',
+                      borderRadius: 10,
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.75rem'
+                    }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="What's your reminder?"
+                      value={reminderText}
+                      onChange={e => setReminderText(e.target.value)}
+                      style={{
+                        padding: '0.75rem',
+                        borderRadius: 8,
+                        border: '1px solid rgba(139,92,246,0.3)',
+                        background: 'rgba(139,92,246,0.05)',
+                        color: 'var(--text-dark)',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                    <input
+                      type="time"
+                      value={reminderTime}
+                      onChange={e => setReminderTime(e.target.value)}
+                      style={{
+                        padding: '0.75rem',
+                        borderRadius: 8,
+                        border: '1px solid rgba(139,92,246,0.3)',
+                        background: 'rgba(139,92,246,0.05)',
+                        color: 'var(--text-dark)',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                    <button
+                      onClick={addCustomReminder}
+                      style={{
+                        padding: '0.75rem',
+                        background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      Set Reminder
+                    </button>
+                  </motion.div>
+                )}
+
+                {/* Quick Reminder Buttons */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <button 
+                    onClick={() => {
+                      const now = new Date();
+                      setTimeout(() => showNotification('⏰ It\'s time to journal!', 'success'), 60000);
+                      showNotification('📌 Reminder set for 1 hour', 'info');
+                    }}
+                    style={{ 
+                      padding: '0.75rem',
+                      background: 'linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(167,139,250,0.1) 100%)',
+                      color: '#8b5cf6',
+                      border: '1px solid rgba(139,92,246,0.3)',
+                      borderRadius: 8,
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    ⏱️ Remind in 1h
+                  </button>
+                  <button 
+                    onClick={() => {
+                      showNotification('📌 Daily reminder set for tomorrow', 'info');
+                    }}
+                    style={{ 
+                      padding: '0.75rem',
+                      background: 'linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(167,139,250,0.15) 100%)',
+                      color: '#8b5cf6',
+                      border: '1px solid rgba(139,92,246,0.4)',
+                      borderRadius: 8,
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    📅 Daily Reminder
+                  </button>
+                </div>
+
+                {/* Reminders List */}
+                {reminders.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
+                    {reminders.map(reminder => (
+                      <div
+                        key={reminder.id}
+                        style={{
+                          padding: '0.75rem',
+                          background: reminder.enabled 
+                            ? 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(167,139,250,0.05) 100%)'
+                            : 'rgba(200,200,200,0.05)',
+                          border: reminder.enabled 
+                            ? '1px solid rgba(139,92,246,0.2)'
+                            : '1px solid rgba(200,200,200,0.2)',
+                          borderRadius: 8,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          opacity: reminder.enabled ? 1 : 0.6
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-dark)', fontSize: '0.9rem' }}>
+                            {reminder.message}
+                          </div>
+                          <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem' }}>
+                            <Clock size={14} /> {reminder.time}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            onClick={() => toggleReminder(reminder.id)}
+                            style={{
+                              background: reminder.enabled ? '#10b981' : '#d1d5db',
+                              color: 'white',
+                              border: 'none',
+                              padding: '0.4rem 0.5rem',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              fontWeight: 600
+                            }}
+                          >
+                            {reminder.enabled ? '✓' : '○'}
+                          </button>
+                          <button
+                            onClick={() => deleteReminder(reminder.id)}
+                            style={{
+                              background: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              padding: '0.4rem 0.5rem',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: '0.75rem'
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '1rem' }}>
+                    No custom reminders yet. Add one to stay motivated!
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Log Activity Card */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="glass-card animate-in" 
+            style={{ 
+              padding: '1.5rem', 
+              borderRadius: 16, 
+              boxShadow: '0 8px 24px rgba(251,146,60,0.12)',
+              background: 'linear-gradient(135deg, rgba(251,146,60,0.08) 0%, rgba(251,191,36,0.04) 100%)',
+              border: '1px solid rgba(251,146,60,0.2)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                background: 'linear-gradient(135deg, #fb923c, #fbbf24)',
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '1.5rem'
+              }}>
+                <Activity size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-dark)' }}>Log Activity</h3>
+                <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>Track your daily progress</small>
+              </div>
+            </div>
+
+            <form onSubmit={handleAddActivity} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input 
+                type="date" 
+                value={activityInput.date} 
+                onChange={e => setActivityInput(s=>({ ...s, date: e.target.value }))} 
+                style={{ 
+                  padding: '0.75rem', 
+                  borderRadius: 10,
+                  border: '1px solid rgba(251,146,60,0.3)',
+                  background: 'rgba(251,146,60,0.05)',
+                  color: 'var(--text-dark)',
+                  fontFamily: 'inherit'
+                }} 
+              />
+              
+              <div>
+                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-dark)', display: 'block', marginBottom: '0.5rem' }}>
+                  😴 Sleep hours
+                </label>
+                <input 
+                  type="number" 
+                  placeholder="8" 
+                  value={activityInput.sleep} 
+                  onChange={e => setActivityInput(s=>({ ...s, sleep: e.target.value }))} 
+                  style={{ 
+                    padding: '0.75rem', 
+                    borderRadius: 10,
+                    width: '100%',
+                    border: '1px solid rgba(251,146,60,0.3)',
+                    background: 'rgba(251,146,60,0.05)',
+                    color: 'var(--text-dark)'
+                  }} 
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-dark)', display: 'block', marginBottom: '0.5rem' }}>
+                  🏃 Exercise minutes
+                </label>
+                <input 
+                  type="number" 
+                  placeholder="30" 
+                  value={activityInput.exercise} 
+                  onChange={e => setActivityInput(s=>({ ...s, exercise: e.target.value }))} 
+                  style={{ 
+                    padding: '0.75rem', 
+                    borderRadius: 10,
+                    width: '100%',
+                    border: '1px solid rgba(251,146,60,0.3)',
+                    background: 'rgba(251,146,60,0.05)',
+                    color: 'var(--text-dark)'
+                  }} 
+                />
+              </div>
+
+              <label style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', padding: '0.75rem', borderRadius: 10, background: 'rgba(251,146,60,0.05)', border: '1px solid rgba(251,146,60,0.2)', cursor: 'pointer', transition: 'all 0.3s ease' }}>
+                <input 
+                  type="checkbox" 
+                  checked={activityInput.journaled} 
+                  onChange={e => setActivityInput(s=>({ ...s, journaled: e.target.checked }))}
+                  style={{ cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-dark)' }}>📔 Journaled today</span>
+              </label>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <button 
+                  className="btn btn-primary" 
+                  type="submit"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #fb923c, #f97316)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.75rem',
+                    fontWeight: 600
+                  }}
+                >
+                  ✓ Add
+                </button>
+                <button 
+                  type="button" 
+                  className="btn" 
+                  onClick={() => { setActivityInput({ date:'', sleep:'', exercise:'', journaled:false }); }}
+                  style={{ 
+                    background: 'rgba(251,146,60,0.1)',
+                    color: '#fb923c',
+                    border: 'none',
+                    padding: '0.75rem',
+                    fontWeight: 600
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+
+              {/* Progress Section */}
+              <div style={{ 
+                marginTop: '1rem', 
+                padding: '1rem', 
+                borderRadius: 12,
+                background: 'linear-gradient(135deg, rgba(235,245,249,0.8) 0%, rgba(224,242,254,0.4) 100%)',
+                border: '1px solid rgba(30,144,255,0.15)'
+              }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '1rem' }}>
+                  📊 Progress (7 days)
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {(() => { const p = computeGoalProgress(); return (
                     <>
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Sleep</span><span>{p.sleep}%</span></div>
-                        <div style={{ height: 10, background: '#eef2ff', borderRadius: 8, overflow: 'hidden', marginTop: 6 }}><div style={{ width: `${p.sleep}%`, height: '100%', background: 'linear-gradient(90deg,#7c3aed,#4f46e5)' }} /></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-dark)' }}>😴 Sleep</span>
+                          <span style={{ fontWeight: 700, color: '#8b5cf6' }}>{p.sleep}%</span>
+                        </div>
+                        <div style={{ height: 12, background: 'rgba(139,92,246,0.15)', borderRadius: 10, overflow: 'hidden' }}>
+                          <div style={{ width: `${p.sleep}%`, height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)', transition: 'width 0.4s ease' }} />
+                        </div>
                       </div>
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Exercise</span><span>{p.exercise}%</span></div>
-                        <div style={{ height: 10, background: '#fff7ed', borderRadius: 8, overflow: 'hidden', marginTop: 6 }}><div style={{ width: `${p.exercise}%`, height: '100%', background: 'linear-gradient(90deg,#f97316,#fb923c)' }} /></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-dark)' }}>🏃 Exercise</span>
+                          <span style={{ fontWeight: 700, color: '#f97316' }}>{p.exercise}%</span>
+                        </div>
+                        <div style={{ height: 12, background: 'rgba(249,115,22,0.15)', borderRadius: 10, overflow: 'hidden' }}>
+                          <div style={{ width: `${p.exercise}%`, height: '100%', background: 'linear-gradient(90deg, #f97316, #fb923c)', transition: 'width 0.4s ease' }} />
+                        </div>
                       </div>
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Journaling</span><span>{p.journaling}%</span></div>
-                        <div style={{ height: 10, background: '#ecfdf5', borderRadius: 8, overflow: 'hidden', marginTop: 6 }}><div style={{ width: `${p.journaling}%`, height: '100%', background: 'linear-gradient(90deg,#10b981,#34d399)' }} /></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-dark)' }}>📔 Journaling</span>
+                          <span style={{ fontWeight: 700, color: '#10b981' }}>{p.journaling}%</span>
+                        </div>
+                        <div style={{ height: 12, background: 'rgba(16,185,129,0.15)', borderRadius: 10, overflow: 'hidden' }}>
+                          <div style={{ width: `${p.journaling}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #34d399)', transition: 'width 0.4s ease' }} />
+                        </div>
                       </div>
                     </>
                   ); })()}
                 </div>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
 
         {/* Main Content Grid */}

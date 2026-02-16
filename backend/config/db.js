@@ -14,6 +14,11 @@ const sequelize = new Sequelize(
 
 const connectDB = async () => {
   try {
+    // Load all models
+    require('../models/User');
+    require('../models/JournalEntry');
+    require('../models/EmergencyContact');
+
     await sequelize.authenticate();
     console.log('MySQL Connected');
     // Sync models (force: true drops and recreates tables to fix schema issues)

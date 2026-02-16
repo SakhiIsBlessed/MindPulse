@@ -34,17 +34,129 @@ const Journal = () => {
   // Emotion detection
   const [sentimentSummary, setSentimentSummary] = useState(null);
 
+  // Favorite Memories
+  const [favoriteMemories, setFavoriteMemories] = useState([]);
+  const memoriesScrollRef = useRef(null);
+
+  // Favorite Music
+  const [favoriteSongs, setFavoriteSongs] = useState([]);
+  const [currentPlayingSong, setCurrentPlayingSong] = useState(null);
+  const [isLoadingMusic, setIsLoadingMusic] = useState(false);
+  const musicPlayerRef = useRef(null);
+  const songsScrollRef = useRef(null);
+
   const [dateFilter, setDateFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   const tagInputRef = useRef(null);
 
-  useEffect(() => { fetchEntries(); }, []);
+  useEffect(() => { fetchEntries(); loadMemories(); loadSongs(); }, []);
 
   useEffect(() => {
     // update sentiment summary live for current content
     setSentimentSummary(analyzeEmotion(content || voiceTranscription || ''));
   }, [content, voiceTranscription]);
+
+  const loadMemories = () => {
+    try {
+      const saved = localStorage.getItem('favoriteMemories');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setFavoriteMemories(parsed);
+      }
+    } catch (err) {
+      console.error('Failed to load memories:', err);
+    }
+  };
+
+  const saveMemories = (memories) => {
+    try {
+      localStorage.setItem('favoriteMemories', JSON.stringify(memories));
+    } catch (err) {
+      console.error('Failed to save memories:', err);
+    }
+  };
+
+  // Favorite Music handlers
+  const loadSongs = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      const { data } = await axios.get('/api/songs', config);
+      setFavoriteSongs(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load songs:', err);
+    }
+  };
+
+  const handleAddSong = async (ev) => {
+    const files = Array.from(ev.target.files || []);
+    if (files.length === 0) return;
+
+    for (const file of files) {
+      if (!file.type.startsWith('audio/')) {
+        alert('Please upload audio files only (mp3, wav, ogg, etc.)');
+        continue;
+      }
+
+      try {
+        setIsLoadingMusic(true);
+        const token = localStorage.getItem('token');
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const fd = new FormData();
+        fd.append('song', file);
+        fd.append('title', file.name.replace(/\.[^/.]+$/, ''));
+
+        console.log('Uploading song:', file.name, 'Size:', file.size, 'Type:', file.type);
+
+        const { data } = await axios.post('/api/songs', fd, {
+          ...config,
+          headers: { ...(config.headers || {}), 'Content-Type': 'multipart/form-data' }
+        });
+
+        setFavoriteSongs(prev => [...prev, data]);
+        console.log('Song uploaded successfully:', data.title);
+      } catch (err) {
+        console.error('Failed to upload song:', err.response?.data || err.message);
+        const errorMsg = err.response?.data?.error || err.message || 'Failed to upload song';
+        alert(errorMsg);
+      } finally {
+        setIsLoadingMusic(false);
+      }
+    }
+    ev.target.value = '';
+  };
+
+  const removeSong = async (songId) => {
+    if (!confirm('Delete this song?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      await axios.delete(`/api/songs/${songId}`, config);
+      setFavoriteSongs(prev => prev.filter(s => s._id !== songId));
+      if (currentPlayingSong?._id === songId) {
+        setCurrentPlayingSong(null);
+        if (musicPlayerRef.current) musicPlayerRef.current.pause();
+      }
+    } catch (err) {
+      console.error('Failed to delete song:', err);
+      alert('Failed to delete song');
+    }
+  };
+
+  const playSong = (song) => {
+    setCurrentPlayingSong(song);
+  };
+
+  const scrollSongs = (direction) => {
+    if (songsScrollRef.current) {
+      const scrollAmount = 300;
+      songsScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const fetchEntries = async () => {
     try {
@@ -62,6 +174,39 @@ const Journal = () => {
   const resetForm = () => {
     setMood(3); setContent(''); setTags([]); setTagInput(''); setEditId(null);
     setAttachments([]); setVoiceNote(null); setVoiceTranscription(''); setSentimentSummary(null);
+    // DO NOT reset favoriteMemories - they should be permanent
+  };
+
+  // Favorite Memories handlers
+  const handleAddMemory = (ev) => {
+    const files = Array.from(ev.target.files || []);
+    const newMemories = files.map(f => ({ 
+      id: Date.now() + Math.random(), 
+      file: f, 
+      preview: URL.createObjectURL(f),
+      name: f.name,
+      uploadDate: new Date().toLocaleDateString()
+    }));
+    const updated = [...favoriteMemories, ...newMemories];
+    setFavoriteMemories(updated);
+    saveMemories(updated);
+    ev.target.value = '';
+  };
+
+  const removeMemory = (id) => {
+    const updated = favoriteMemories.filter(m => m.id !== id);
+    setFavoriteMemories(updated);
+    saveMemories(updated);
+  };
+
+  const scrollMemories = (direction) => {
+    if (memoriesScrollRef.current) {
+      const scrollAmount = 300;
+      memoriesScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
   };
 
   const handleAddTag = (ev) => {
@@ -93,9 +238,9 @@ const Journal = () => {
         attachments.forEach((a, idx) => fd.append('attachments', a.file, a.file.name || `file${idx}`));
 
         if (editId) {
-          await axios.put(`/api/journal/${editId}`, fd, { ...config, headers: { ...(config.headers||{}), 'Content-Type': 'multipart/form-data' } });
+          await axios.put(`/api/journal/${editId}`, fd, { ...config, headers: { ...(config.headers || {}), 'Content-Type': 'multipart/form-data' } });
         } else {
-          await axios.post('/api/journal', fd, { ...config, headers: { ...(config.headers||{}), 'Content-Type': 'multipart/form-data' } });
+          await axios.post('/api/journal', fd, { ...config, headers: { ...(config.headers || {}), 'Content-Type': 'multipart/form-data' } });
         }
       } else {
         const payload = { content, mood_score: mood, tags, transcription: voiceTranscription };
@@ -137,12 +282,12 @@ const Journal = () => {
   // Client-side filtering/search
   const filtered = entries.filter(e => {
     if (dateFilter) {
-      const d = new Date(e.createdAt || e.created_at || e.date).toISOString().slice(0,10);
+      const d = new Date(e.createdAt || e.created_at || e.date).toISOString().slice(0, 10);
       if (d !== dateFilter) return false;
     }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      if (!((e.content||'').toLowerCase().includes(q) || (e.tags||[]).join(' ').toLowerCase().includes(q))) return false;
+      if (!((e.content || '').toLowerCase().includes(q) || (e.tags || []).join(' ').toLowerCase().includes(q))) return false;
     }
     return true;
   });
@@ -162,7 +307,7 @@ const Journal = () => {
       if (ambientAudioRef.current) {
         ambientAudioRef.current.src = src;
         ambientAudioRef.current.loop = true;
-        ambientAudioRef.current.play().catch(()=>{});
+        ambientAudioRef.current.play().catch(() => { });
       }
     }
   };
@@ -190,11 +335,11 @@ const Journal = () => {
         let interim = '';
         recognitionRef.current.onresult = (ev) => {
           let final = '';
-          for (let i=0;i<ev.results.length;i++) {
+          for (let i = 0; i < ev.results.length; i++) {
             if (ev.results[i].isFinal) final += ev.results[i][0].transcript + ' ';
             else interim += ev.results[i][0].transcript + ' ';
           }
-          setVoiceTranscription(prev => (final || interim) );
+          setVoiceTranscription(prev => (final || interim));
         };
         recognitionRef.current.start();
       }
@@ -205,7 +350,7 @@ const Journal = () => {
     try {
       mediaRecorderRef.current?.stop();
       recognitionRef.current?.stop();
-    } catch (e) {}
+    } catch (e) { }
     setIsRecording(false);
   };
 
@@ -216,32 +361,32 @@ const Journal = () => {
     setAttachments(prev => [...prev, ...newFiles]);
     ev.target.value = '';
   };
-  const removeAttachment = (idx) => setAttachments(prev => { const p=[...prev]; p.splice(idx,1); return p; });
+  const removeAttachment = (idx) => setAttachments(prev => { const p = [...prev]; p.splice(idx, 1); return p; });
 
   // Emotion detection helpers
   function analyzeEmotion(text) {
     if (!text) return null;
-    const pos = ['happy','joy','delighted','glad','love','content','relieved','optimistic','grateful','excited'];
-    const neg = ['sad','depressed','angry','upset','anxious','worried','lonely','hate','tired','frustrated'];
+    const pos = ['happy', 'joy', 'delighted', 'glad', 'love', 'content', 'relieved', 'optimistic', 'grateful', 'excited'];
+    const neg = ['sad', 'depressed', 'angry', 'upset', 'anxious', 'worried', 'lonely', 'hate', 'tired', 'frustrated'];
     const words = text.toLowerCase().split(/[^a-zA-Z]+/).filter(Boolean);
-    let p=0,n=0; const found=[];
+    let p = 0, n = 0; const found = [];
     for (const w of words) {
-      if (pos.includes(w)) { p++; found.push({word:w,type:'positive'}); }
-      if (neg.includes(w)) { n++; found.push({word:w,type:'negative'}); }
+      if (pos.includes(w)) { p++; found.push({ word: w, type: 'positive' }); }
+      if (neg.includes(w)) { n++; found.push({ word: w, type: 'negative' }); }
     }
     const score = p - n;
     const sentiment = score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral';
     return { positive: p, negative: n, score, sentiment, keywords: found };
   }
 
-  const escapeHtml = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const highlightEmotional = (text) => {
     const res = analyzeEmotion(text);
     if (!res) return escapeHtml(text);
     let out = escapeHtml(text);
-    const uniq = Array.from(new Set(res.keywords.map(k=>k.word)));
+    const uniq = Array.from(new Set(res.keywords.map(k => k.word)));
     uniq.forEach(w => {
-      const re = new RegExp('\\b'+w+'\\b','ig');
+      const re = new RegExp('\\b' + w + '\\b', 'ig');
       out = out.replace(re, m => `<mark style="background: rgba(255,205,210,0.5)">${m}</mark>`);
     });
     return out;
@@ -249,6 +394,40 @@ const Journal = () => {
 
   return (
     <div style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
+      <style>{`
+        .memories-scroll::-webkit-scrollbar {
+          height: 8px;
+        }
+        .memories-scroll::-webkit-scrollbar-track {
+          background: linear-gradient(90deg, rgba(108,92,231,0.05), rgba(108,92,231,0.02));
+          borderRadius: 10px;
+        }
+        .memories-scroll::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, rgba(108,92,231,0.4), rgba(108,92,231,0.3));
+          borderRadius: 10px;
+          transition: all 0.3s ease;
+        }
+        .memories-scroll::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, rgba(108,92,231,0.6), rgba(108,92,231,0.5));
+          box-shadow: 0 0 10px rgba(108,92,231,0.3);
+        }
+        .memories-upload:hover {
+          border-color: rgba(108,92,231,0.5) !important;
+          background: rgba(108,92,231,0.08) !important;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(108,92,231,0.15) !important;
+        }
+        @keyframes shimmer {
+          0% { background-position: -1000px 0; }
+          100% { background-position: 1000px 0; }
+        }
+        .memories-container {
+          background: linear-gradient(135deg, rgba(108,92,231,0.04) 0%, rgba(168,85,247,0.03) 100%);
+          border-radius: 12px;
+          padding: 16px;
+          border: 1px solid rgba(108,92,231,0.1);
+        }
+      `}</style>
       <motion.div className="glass-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ margin: 0 }}>Journal</h1>
         <p style={{ color: 'var(--text-muted)', marginTop: 6 }}>Write daily entries, track mood, tag and search.</p>
@@ -258,33 +437,286 @@ const Journal = () => {
         <motion.form className="glass-card" onSubmit={handleSave} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h2 style={{ margin: 0 }}>{editId ? 'Edit Entry' : 'New Entry'}</h2>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" className="btn btn-secondary" onClick={() => setIsFocusMode(f => !f)} title="Toggle Focus Mode">{isFocusMode ? 'Focus On' : 'Focus'}</button>
-              <button type="button" className="btn btn-secondary" onClick={() => setIsDistractionFree(f => !f)} title="Toggle Distraction Free">{isDistractionFree ? 'Distraction Off' : 'Distraction Free'}</button>
-              <button type="button" className="btn btn-secondary" onClick={resetForm} style={{ gap: 8 }}>Clear</button>
-            </div>
-          </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginBottom: 12 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsFocusMode(f => !f)}
+                  title="Toggle Focus Mode"
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: isFocusMode ? 'rgba(108,92,231,0.08)' : '#fff', color: '#000', cursor: 'pointer' }}
+                >
+                  {isFocusMode ? 'Focused' : 'Focus'}
+                </button>
 
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button type="button" className="btn" onClick={() => toggleAmbient('rain')} title="Rain"><Music /> Rain</button>
-              <button type="button" className="btn" onClick={() => toggleAmbient('forest')} title="Forest"><Music /> Forest</button>
-              <button type="button" className="btn" onClick={() => toggleAmbient('piano')} title="Piano"><Music /> Piano</button>
-            </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                <input type="file" accept="image/*,audio/*" multiple onChange={handleFileAdd} style={{ display: 'none' }} />
-                <span className="btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>📎 Attach</span>
-              </label>
-              <button type="button" className="btn btn-primary" onClick={() => isRecording ? stopRecording() : startRecording()}>{isRecording ? <Square /> : <Mic />} {isRecording ? 'Stop' : 'Record'}</button>
+                <button
+                  type="button"
+                  onClick={() => setIsDistractionFree(f => !f)}
+                  title="Toggle Distraction Free"
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: isDistractionFree ? 'rgba(108,92,231,0.08)' : '#fff', color: '#000', cursor: 'pointer' }}
+                >
+                  {isDistractionFree ? 'Distraction Off' : 'Distraction Free'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: '#fff', color: '#000', cursor: 'pointer' }}
+                >
+                  Clear
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toggleAmbient('rain')}
+                  title="Rain"
+                  style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: ambient === 'rain' ? 'rgba(0,0,0,0.06)' : '#fff', color: '#000', cursor: 'pointer' }}
+                >
+                  🌧️ Rain
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toggleAmbient('forest')}
+                  title="Forest"
+                  style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: ambient === 'forest' ? 'rgba(0,0,0,0.06)' : '#fff', color: '#000', cursor: 'pointer' }}
+                >
+                  🌲 Forest
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toggleAmbient('piano')}
+                  title="Piano"
+                  style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: ambient === 'piano' ? 'rgba(0,0,0,0.06)' : '#fff', color: '#000', cursor: 'pointer' }}
+                >
+                  🎹 Piano
+                </button>
+              </div>
+
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                  <input type="file" accept="image/*,audio/*" multiple onChange={handleFileAdd} style={{ display: 'none' }} />
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: '#fff', color: '#000' }}>📎 Attach</span>
+                </label>
+                <button type="button" className="btn btn-primary" onClick={() => isRecording ? stopRecording() : startRecording()}>{isRecording ? <Square /> : <Mic />} {isRecording ? 'Stop' : 'Record'}</button>
+              </div>
             </div>
           </div>
 
           <label style={{ display: 'block', marginBottom: 8 }}>Mood</label>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             {moodEmojis.map((emo, i) => (
-              <button key={i} type="button" onClick={() => setMood(i+1)} className="btn" style={{ padding: 12, minWidth: 56, borderRadius: 12, border: mood === i+1 ? `2px solid var(--primary)` : '1px solid rgba(15,23,42,0.06)', background: mood === i+1 ? 'rgba(108,92,231,0.08)' : 'transparent' }}>{emo}</button>
+              <button key={i} type="button" onClick={() => setMood(i + 1)} className="btn" style={{ padding: 12, minWidth: 56, borderRadius: 12, border: mood === i + 1 ? `2px solid var(--primary)` : '1px solid rgba(15,23,42,0.06)', background: mood === i + 1 ? 'rgba(108,92,231,0.08)' : 'transparent' }}>{emo}</button>
             ))}
+          </div>
+
+          <label style={{ display: 'block', marginBottom: 12, fontWeight: 600, fontSize: 15 }}>💝 Favorite Memories</label>
+          <div style={{ marginBottom: 16 }} className="memories-container">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', borderRadius: 10, border: '2px dashed rgba(108,92,231,0.3)', background: 'rgba(108,92,231,0.04)', color: '#000', cursor: 'pointer', transition: 'all 0.3s ease', fontWeight: 500 }} className="memories-upload">
+                <input type="file" accept="image/*" multiple onChange={handleAddMemory} style={{ display: 'none' }} />
+                <span style={{ fontSize: 20 }}>📸</span>
+                <span>Add Memory Photo</span>
+              </label>
+              <small style={{ color: 'var(--text-muted)', fontSize: 13 }}>Upload photos of loved ones & happy moments</small>
+            </div>
+
+            {favoriteMemories.length > 0 && (
+              <div style={{ position: 'relative', marginBottom: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(108,92,231,0.1)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#000' }}>Your Memories</span>
+                    <span style={{ padding: '4px 10px', borderRadius: 999, background: 'rgba(108,92,231,0.15)', fontSize: 12, fontWeight: 600, color: 'rgba(108,92,231,0.9)' }}>{favoriteMemories.length}</span>
+                  </div>
+                  {favoriteMemories.length > 3 && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button type="button" onClick={() => scrollMemories('left')} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(108,92,231,0.2)', background: 'rgba(108,92,231,0.04)', cursor: 'pointer', fontSize: 16, transition: 'all 0.2s', fontWeight: 600 }} onMouseEnter={(e) => { e.target.style.background = 'rgba(108,92,231,0.12)'; }} onMouseLeave={(e) => { e.target.style.background = 'rgba(108,92,231,0.04)'; }}>←</button>
+                      <button type="button" onClick={() => scrollMemories('right')} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(108,92,231,0.2)', background: 'rgba(108,92,231,0.04)', cursor: 'pointer', fontSize: 16, transition: 'all 0.2s', fontWeight: 600 }} onMouseEnter={(e) => { e.target.style.background = 'rgba(108,92,231,0.12)'; }} onMouseLeave={(e) => { e.target.style.background = 'rgba(108,92,231,0.04)'; }}>→</button>
+                    </div>
+                  )}
+                </div>
+
+                <div ref={memoriesScrollRef} style={{ display: 'flex', gap: 14, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 8, scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }} className="memories-scroll">
+                  {favoriteMemories.map(memory => (
+                    <motion.div
+                      key={memory.id}
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      style={{
+                        position: 'relative',
+                        minWidth: 180,
+                        height: 180,
+                        borderRadius: 14,
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        cursor: 'pointer',
+                        boxShadow: '0 8px 20px rgba(108,92,231,0.2), inset 0 1px 0 rgba(255,255,255,0.2)',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        transition: 'all 0.3s ease'
+                      }}
+                      whileHover={{ scale: 1.08, boxShadow: '0 12px 32px rgba(108,92,231,0.3)' }}
+                    >
+                      <img src={memory.preview} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt={memory.name} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.5) 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 12, opacity: 0, transition: 'opacity 0.3s ease', _hover: { opacity: 1 } }} onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; }}>
+                        <button
+                          type="button"
+                          onClick={() => removeMemory(memory.id)}
+                          style={{
+                            background: 'rgba(255,76,76,0.9)',
+                            backdropFilter: 'blur(8px)',
+                            border: 'none',
+                            borderRadius: 8,
+                            color: 'white',
+                            cursor: 'pointer',
+                            padding: '8px 10px',
+                            fontSize: 20,
+                            width: 36,
+                            height: 36,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                            fontWeight: 'bold',
+                            boxShadow: '0 4px 12px rgba(255,76,76,0.3)'
+                          }}
+                          onMouseEnter={(e) => { e.target.style.background = 'rgba(255,50,50,1)'; e.target.style.transform = 'scale(1.1)'; }}
+                          onMouseLeave={(e) => { e.target.style.background = 'rgba(255,76,76,0.9)'; e.target.style.transform = 'scale(1)'; }}
+                        >
+                          ✕
+                        </button>
+                        <div style={{ color: 'white', fontSize: 11, textAlign: 'center' }}>
+                          <div style={{ fontWeight: 600, marginBottom: 4, textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>{memory.uploadDate}</div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <label style={{ display: 'block', marginBottom: 12, fontWeight: 600, fontSize: 15 }}>🎵 Favorite Songs</label>
+          <div style={{ marginBottom: 16 }} className="memories-container">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', borderRadius: 10, border: '2px dashed rgba(108,92,231,0.3)', background: 'rgba(108,92,231,0.04)', color: '#000', cursor: 'pointer', transition: 'all 0.3s ease', fontWeight: 500, opacity: isLoadingMusic ? 0.6 : 1, pointerEvents: isLoadingMusic ? 'none' : 'auto' }} className="memories-upload">
+                <input type="file" accept="audio/*" multiple onChange={handleAddSong} disabled={isLoadingMusic} style={{ display: 'none' }} />
+                <span style={{ fontSize: 20 }}>🎧</span>
+                <span>{isLoadingMusic ? 'Uploading...' : 'Add Song'}</span>
+              </label>
+              <small style={{ color: 'var(--text-muted)', fontSize: 13 }}>Upload your favorite songs to listen while journaling</small>
+            </div>
+
+            {favoriteSongs.length > 0 && (
+              <div style={{ position: 'relative', marginBottom: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(108,92,231,0.1)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#000' }}>Your Songs</span>
+                    <span style={{ padding: '4px 10px', borderRadius: 999, background: 'rgba(108,92,231,0.15)', fontSize: 12, fontWeight: 600, color: 'rgba(108,92,231,0.9)' }}>{favoriteSongs.length}</span>
+                  </div>
+                  {favoriteSongs.length > 2 && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button type="button" onClick={() => scrollSongs('left')} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(108,92,231,0.2)', background: 'rgba(108,92,231,0.04)', cursor: 'pointer', fontSize: 16, transition: 'all 0.2s', fontWeight: 600 }} onMouseEnter={(e) => { e.target.style.background = 'rgba(108,92,231,0.12)'; }} onMouseLeave={(e) => { e.target.style.background = 'rgba(108,92,231,0.04)'; }}>←</button>
+                      <button type="button" onClick={() => scrollSongs('right')} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(108,92,231,0.2)', background: 'rgba(108,92,231,0.04)', cursor: 'pointer', fontSize: 16, transition: 'all 0.2s', fontWeight: 600 }} onMouseEnter={(e) => { e.target.style.background = 'rgba(108,92,231,0.12)'; }} onMouseLeave={(e) => { e.target.style.background = 'rgba(108,92,231,0.04)'; }}>→</button>
+                    </div>
+                  )}
+                </div>
+
+                <div ref={songsScrollRef} style={{ display: 'flex', gap: 14, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 8, scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }} className="memories-scroll">
+                  {favoriteSongs.map(song => (
+                    <motion.div
+                      key={song._id}
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      style={{
+                        position: 'relative',
+                        minWidth: 160,
+                        height: 160,
+                        borderRadius: 14,
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        cursor: 'pointer',
+                        background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(108,92,231,0.15))',
+                        boxShadow: currentPlayingSong?._id === song._id ? '0 12px 32px rgba(108,92,231,0.4)' : '0 8px 20px rgba(108,92,231,0.2)',
+                        border: currentPlayingSong?._id === song._id ? '2px solid rgba(108,92,231,0.8)' : '1px solid rgba(108,92,231,0.3)',
+                        transition: 'all 0.3s ease',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 16
+                      }}
+                      whileHover={{ scale: 1.06, boxShadow: '0 12px 32px rgba(108,92,231,0.3)' }}
+                      onClick={() => playSong(song)}
+                    >
+                      <div style={{ fontSize: 40, marginBottom: 8 }}>♪</div>
+                      <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(108,92,231,0.9)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>
+                          {song.title}
+                        </div>
+                        {currentPlayingSong?._id === song._id && (
+                          <div style={{ fontSize: 11, color: 'rgba(108,92,231,0.7)', fontWeight: 500 }}>Now Playing</div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeSong(song._id); }}
+                        style={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          background: 'rgba(255,76,76,0.8)',
+                          backdropFilter: 'blur(8px)',
+                          border: 'none',
+                          borderRadius: 8,
+                          color: 'white',
+                          cursor: 'pointer',
+                          padding: '6px 8px',
+                          fontSize: 16,
+                          width: 32,
+                          height: 32,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s',
+                          fontWeight: 'bold'
+                        }}
+                        onMouseEnter={(e) => { e.target.style.background = 'rgba(255,50,50,1)'; e.target.style.transform = 'scale(1.1)'; }}
+                        onMouseLeave={(e) => { e.target.style.background = 'rgba(255,76,76,0.8)'; e.target.style.transform = 'scale(1)'; }}
+                      >
+                        ✕
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {currentPlayingSong && (
+              <div style={{ marginTop: 16, padding: 12, borderRadius: 10, background: 'linear-gradient(135deg, rgba(108,92,231,0.1), rgba(168,85,247,0.08))', border: '1px solid rgba(108,92,231,0.2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                  <span style={{ fontSize: 24 }}>♪</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#000' }}>Now Playing</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{currentPlayingSong.title}</div>
+                  </div>
+                </div>
+                <audio
+                  ref={musicPlayerRef}
+                  controls
+                  src={currentPlayingSong.url}
+                  autoPlay
+                  style={{
+                    width: '100%',
+                    height: 32,
+                    borderRadius: 8,
+                    accentColor: 'rgba(108,92,231,0.9)'
+                  }}
+                  onEnded={() => setCurrentPlayingSong(null)}
+                />
+              </div>
+            )}
           </div>
 
           <label style={{ display: 'block', marginBottom: 8 }}>Write</label>
@@ -366,7 +798,7 @@ const Journal = () => {
                       </div>
                     )}
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <div style={{ width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{moodEmojis[(entry.mood_score || 1)-1]}</div>
+                      <div style={{ width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{moodEmojis[(entry.mood_score || 1) - 1]}</div>
                       <small style={{ color: 'var(--text-muted)' }}>Mood: {entry.mood_score}/5</small>
                     </div>
                   </div>
