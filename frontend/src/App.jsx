@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 import Support from './pages/Support';
 import Profile from './pages/Profile';
 import Home from './pages/Home';
+import Chatbot from './components/Chatbot';
 
 function AppContent() {
   const location = useLocation();
@@ -31,6 +32,7 @@ function AppContent() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <Footer />
+      {!hideNavbar && <Chatbot />}
     </>
   );
 }
