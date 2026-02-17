@@ -1,0 +1,23 @@
+.nav-right .greeting{font-size:0.98rem;color:#fff !important;display:flex;align-items:center;min-width:180px}
+.nav-right .greeting strong{font-weight:600;color:#fff !important}
+.nav-right .greeting{white-space:nowrap;overflow:hidden}
+.nav-right .greeting-caret{margin-left:6px;opacity:0.95;animation:blink 1s steps(2,end) infinite;color:#fff !important}
+@keyframes blink{50%{opacity:0}100%{opacity:1}}
+
+/* Compact avatar used in header */
+.nav-avatar{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6c5ce7,#8b5cf6);color:#fff;font-weight:700;font-size:1rem;border:none;cursor:pointer;padding:0;outline:none}
+.nav-avatar-initial{line-height:1}
+
+/* Icon and link hover smoothing */
+.nav-icon svg, .nav-links .nav-link svg{transition:transform .18s ease,opacity .18s ease}
+.nav-icon:hover svg, .nav-links .nav-link:hover svg{transform:scale(1.06)}
+
+/* Reusable hover button class for subtle lift/glow */
+.btn-hover{transition:transform .18s ease,box-shadow .18s ease}
+
+/* Slight lift and scale for nav links */
+.nav-links .nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;transition:transform .16s ease,background .16s ease}
+.nav-links .nav-link:hover{transform:translateY(-3px) scale(1.02)}
+
+/* Keep notif dot visible sizing consistent */
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#ff4d6d;display:inline-block;margin-left:6px}

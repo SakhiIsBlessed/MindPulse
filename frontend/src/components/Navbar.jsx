@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Bell, User, Home, FileText, BarChart2, LifeBuoy, LogOut, Menu, X, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Toast from './Toast';
-import { getGravatarUrl } from '../utils/gravatar';
 
 const navItems = [
   { to: '/home', label: 'Home', icon: <Home size={16} /> },
@@ -24,6 +23,59 @@ const Navbar = ({ userName = 'User' }) => {
   const timersRef = React.useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Animated greeting - simple typewriter + fade/slide entrance
+  const AnimatedGreeting = ({ userName }) => {
+    const [display, setDisplay] = useState('');
+    useEffect(() => {
+      let mounted = true;
+      const full = `Good Evening, ${userName} 👋`;
+      let idx = 0;
+      let deleting = false;
+
+      const tick = () => {
+        if (!mounted) return;
+        if (!deleting) {
+          idx += 1;
+          setDisplay(full.slice(0, idx));
+          if (idx === full.length) {
+            // pause at end, then start deleting
+            setTimeout(() => { deleting = true; tick(); }, 1200);
+            return;
+          }
+        } else {
+          idx -= 1;
+          setDisplay(full.slice(0, idx));
+          if (idx === 0) {
+            // pause briefly then start typing again
+            deleting = false;
+            setTimeout(() => tick(), 400);
+            return;
+          }
+        }
+        // typing is a bit slower than deleting for snappier feel
+        const delay = deleting ? 28 : 40;
+        setTimeout(tick, delay);
+      };
+
+      // kick off
+      const starter = setTimeout(tick, 260);
+      return () => { mounted = false; clearTimeout(starter); };
+    }, [userName]);
+
+    return (
+      <motion.div
+        className="greeting"
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.36, ease: 'easeOut' }}
+        aria-live="polite"
+      >
+        <strong>{display}</strong>
+        <span className="greeting-caret" aria-hidden>▍</span>
+      </motion.div>
+    );
+  };
 
   // Load saved notifications
   useEffect(() => {
@@ -215,11 +267,9 @@ const Navbar = ({ userName = 'User' }) => {
         </div>
 
         <div className="nav-right">
-          <motion.div className="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
-            Good Evening, <strong>{userName}</strong> <span className="wave">👋</span>
-          </motion.div>
+          <AnimatedGreeting userName={userName} />
 
-          <motion.button className="icon-btn" title="Notifications" whileHover={{ scale: 1.06 }} onClick={handleBellToggle} aria-pressed={notifPermission === 'granted'}>
+          <motion.button className="icon-btn nav-icon" title="Notifications" whileHover={{ scale: 1.06 }} onClick={handleBellToggle} aria-pressed={notifPermission === 'granted'}>
             <Bell />
             <span className="notif-dot" style={{ display: hasUnread ? 'inline-block' : 'none' }} />
           </motion.button>
@@ -265,23 +315,20 @@ const Navbar = ({ userName = 'User' }) => {
             )}
           </AnimatePresence>
 
-          <motion.div className="avatar" whileHover={{ scale: 1.05 }} onClick={() => navigate('/profile')} title="Profile">
-            <img
-              src={getGravatarUrl(localStorage.getItem('email'), 200)}
-              alt="Profile"
-              style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
-            {!getGravatarUrl(localStorage.getItem('email')) && (
-              <div className="avatar-initials">{(userName || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}</div>
-            )}
-          </motion.div>
+          {/* Compact, theme-matching initial avatar */}
+          <motion.button
+            className="nav-avatar"
+            whileHover={{ scale: 1.06, boxShadow: '0 6px 18px rgba(108,92,231,0.18)' }}
+            onClick={() => navigate('/profile')}
+            title="Profile"
+            aria-label={`Open profile for ${userName}`}
+          >
+            <span className="nav-avatar-initial">{(userName || 'U').charAt(0).toUpperCase()}</span>
+          </motion.button>
 
-          <button className="btn-logout" onClick={doLogout} title="Logout">
+          <motion.button className="btn-logout btn-hover" whileHover={{ y: -3, boxShadow: '0 10px 24px rgba(0,0,0,0.08)' }} onClick={doLogout} title="Logout">
             <LogOut size={14} /> Logout
-          </button>
+          </motion.button>
 
           {/* Mobile menu toggle */}
           <button className="icon-btn nav-toggle" onClick={() => setOpen(s => !s)} aria-label="Toggle menu">

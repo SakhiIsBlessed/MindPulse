@@ -21,9 +21,10 @@ const connectDB = async () => {
 
     await sequelize.authenticate();
     console.log('MySQL Connected');
-    // Sync models (force: true drops and recreates tables to fix schema issues)
-    // Use alter instead of force to avoid dropping tables on every start
-    await sequelize.sync({ alter: true });
+    // Sync models
+    // Changed alter: true to false to prevent "Too many keys" error (MySQL limit 64 keys).
+    // If schema updates are needed, we should use migrations or force: true (data loss warning).
+    await sequelize.sync({ alter: false });
     console.log('Database synced (alter applied)');
   } catch (error) {
     console.error(`Error: ${error.message}`);

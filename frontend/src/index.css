@@ -15,6 +15,22 @@
     --gradient-accent: linear-gradient(135deg, #06b6d4 0%, #34d399 100%);
 }
 
+[data-theme='dark'] {
+    --bg: #0f172a;
+    --bg-soft: #1e293b;
+    --bg-card: #1e293b;
+    --text-dark: #f1f5f9;
+    --text-muted: #94a3b8;
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --shadow-1: 0 6px 20px rgba(0, 0, 0, 0.3);
+    --shadow-2: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
 /* --- Visual polish overrides (appended) --- */
 :root {
     --radius: 12px;

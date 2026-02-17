@@ -70,11 +70,11 @@ const Footer = () => {
             <div className="nav-column">
               <h4 className="footer-section-title">Company</h4>
               <nav className="footer-nav" aria-label="company">
-                {[{ name: 'About', href: '/#about' }, { name: 'Careers', href: '/#careers' }, { name: 'Privacy', href: '/#privacy' }].map((it, i) => (
-                  <a key={i} href={it.href} className="footer-link">
+                {[{ name: 'About', href: '/about' }, { name: 'Careers', href: '/careers' }, { name: 'Privacy', href: '/privacy' }].map((it, i) => (
+                  <Link key={i} to={it.href} className="footer-link">
                     <span>{it.name}</span>
                     <span className="underline" />
-                  </a>
+                  </Link>
                 ))}
               </nav>
             </div>
@@ -99,9 +99,9 @@ const Footer = () => {
         <div className="footer-divider" aria-hidden />
 
         <div className="footer-bottom container">
-          <small>© {new Date().getFullYear()} MindPulse — All rights reserved.</small>
+          <small>© {new Date().getFullYear()} MindPulse • Built with ❤️ to support student mental wellness.</small>
           <div className="footer-links-inline">
-            <a href="/#privacy">Privacy</a>
+            <Link to="/privacy">Privacy</Link>
             <span className="sep">•</span>
             <a href="/#terms">Terms</a>
           </div>

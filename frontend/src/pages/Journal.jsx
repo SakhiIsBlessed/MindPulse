@@ -295,7 +295,8 @@ const Journal = () => {
   // Ambient sound control
   const toggleAmbient = (name) => {
     if (ambient === name) {
-      ambientAudioRef.current?.pause();
+      // stop current
+      try { ambientAudioRef.current?.pause(); } catch (e) { console.warn('pause failed', e); }
       setAmbient('');
     } else {
       setAmbient(name);
@@ -304,11 +305,35 @@ const Journal = () => {
         forest: '/ambient/forest.mp3',
         piano: '/ambient/piano.mp3'
       }[name];
-      if (ambientAudioRef.current) {
-        ambientAudioRef.current.src = src;
-        ambientAudioRef.current.loop = true;
-        ambientAudioRef.current.play().catch(() => { });
+
+      // Create or reuse an Audio object for more robust playback handling
+      let audio = ambientAudioRef.current;
+      if (!audio || !(audio instanceof HTMLAudioElement)) {
+        audio = new Audio();
+        ambientAudioRef.current = audio;
       }
+
+      audio.pause();
+      audio.src = src;
+      audio.loop = true;
+      audio.volume = 0.65;
+
+      // handlers to surface errors
+      audio.onplay = () => console.log('Ambient playback started:', src);
+      audio.onended = () => console.log('Ambient ended');
+      audio.onerror = (ev) => {
+        console.error('Ambient audio error for', src, ev);
+        // if file missing or blocked, inform the user
+        alert(`Unable to play ambience: ${src}.\nPlease ensure the file exists at public/ambient and the browser allows playback.`);
+        setAmbient('');
+      };
+
+      // Try to play — browsers may reject autoplay if not a user gesture; this is a direct click so should succeed
+      audio.play().catch(err => {
+        console.error('Play() promise rejected:', err);
+        alert('Playback blocked by browser or file missing. Check console for details.');
+        setAmbient('');
+      });
     }
   };
 
@@ -427,6 +452,9 @@ const Journal = () => {
           padding: 16px;
           border: 1px solid rgba(108,92,231,0.1);
         }
+        .ambient-btn { transition: all 220ms ease; }
+        .ambient-btn:hover { transform: translateY(-4px) scale(1.02); }
+        .ambient-btn svg { opacity: 0.95; }
       `}</style>
       <motion.div className="glass-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ margin: 0 }}>Journal</h1>
@@ -439,58 +467,77 @@ const Journal = () => {
             <h2 style={{ margin: 0 }}>{editId ? 'Edit Entry' : 'New Entry'}</h2>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginBottom: 12 }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsFocusMode(f => !f)}
-                  title="Toggle Focus Mode"
-                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: isFocusMode ? 'rgba(108,92,231,0.08)' : '#fff', color: '#000', cursor: 'pointer' }}
-                >
-                  {isFocusMode ? 'Focused' : 'Focus'}
-                </button>
+                {/* Streamlined ambient controls: rain / forest / piano */}
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleAmbient('rain')}
+                    title="Rain ambience"
+                    aria-pressed={ambient === 'rain'}
+                    className="ambient-btn"
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 12,
+                      border: 'none',
+                      background: ambient === 'rain' ? 'linear-gradient(90deg,#7dd3fc,#60a5fa)' : 'linear-gradient(180deg,#ffffff,#f7fbff)',
+                      boxShadow: ambient === 'rain' ? '0 8px 30px rgba(96,165,250,0.18)' : '0 6px 18px rgba(15,23,42,0.04)',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      color: ambient === 'rain' ? '#042C54' : '#0f172a'
+                    }}
+                  >
+                    {ambient === 'rain' ? <Square size={14} /> : <Play size={14} />}
+                    <span style={{ fontWeight: 600 }}>Rain</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsDistractionFree(f => !f)}
-                  title="Toggle Distraction Free"
-                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: isDistractionFree ? 'rgba(108,92,231,0.08)' : '#fff', color: '#000', cursor: 'pointer' }}
-                >
-                  {isDistractionFree ? 'Distraction Off' : 'Distraction Free'}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleAmbient('forest')}
+                    title="Forest ambience"
+                    aria-pressed={ambient === 'forest'}
+                    className="ambient-btn"
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 12,
+                      border: 'none',
+                      background: ambient === 'forest' ? 'linear-gradient(90deg,#86efac,#4ade80)' : 'linear-gradient(180deg,#ffffff,#f7fff6)',
+                      boxShadow: ambient === 'forest' ? '0 8px 30px rgba(74,222,128,0.14)' : '0 6px 18px rgba(15,23,42,0.04)',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      color: ambient === 'forest' ? '#052e16' : '#0f172a'
+                    }}
+                  >
+                    {ambient === 'forest' ? <Square size={14} /> : <Play size={14} />}
+                    <span style={{ fontWeight: 600 }}>Forest</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: '#fff', color: '#000', cursor: 'pointer' }}
-                >
-                  Clear
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => toggleAmbient('rain')}
-                  title="Rain"
-                  style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: ambient === 'rain' ? 'rgba(0,0,0,0.06)' : '#fff', color: '#000', cursor: 'pointer' }}
-                >
-                  🌧️ Rain
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => toggleAmbient('forest')}
-                  title="Forest"
-                  style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: ambient === 'forest' ? 'rgba(0,0,0,0.06)' : '#fff', color: '#000', cursor: 'pointer' }}
-                >
-                  🌲 Forest
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => toggleAmbient('piano')}
-                  title="Piano"
-                  style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: ambient === 'piano' ? 'rgba(0,0,0,0.06)' : '#fff', color: '#000', cursor: 'pointer' }}
-                >
-                  🎹 Piano
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleAmbient('piano')}
+                    title="Piano ambience"
+                    aria-pressed={ambient === 'piano'}
+                    className="ambient-btn"
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 12,
+                      border: 'none',
+                      background: ambient === 'piano' ? 'linear-gradient(90deg,#fbcfe8,#c4b5fd)' : 'linear-gradient(180deg,#ffffff,#fffafc)',
+                      boxShadow: ambient === 'piano' ? '0 8px 30px rgba(197,139,253,0.14)' : '0 6px 18px rgba(15,23,42,0.04)',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      color: ambient === 'piano' ? '#2b0c3b' : '#0f172a'
+                    }}
+                  >
+                    {ambient === 'piano' ? <Square size={14} /> : <Play size={14} />}
+                    <span style={{ fontWeight: 600 }}>Piano</span>
+                  </button>
+                </div>
               </div>
 
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
