@@ -10,16 +10,13 @@ import Footer from './components/Footer';
 import Support from './pages/Support';
 import Profile from './pages/Profile';
 import Home from './pages/Home';
-<<<<<<< Updated upstream
 import Chatbot from './components/Chatbot';
-=======
 import About from './pages/About';
 import Careers from './pages/Careers';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import FloatingSupport from './components/FloatingSupport';
 import { ThemeProvider } from './context/ThemeContext';
 import PageWrapper from './components/PageWrapper';
->>>>>>> Stashed changes
 
 function AppContent() {
   const location = useLocation();
