@@ -4,6 +4,7 @@ from textblob import TextBlob
 import random
 import time
 import os
+import re
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -25,7 +26,7 @@ WELLNESS_SUGGESTIONS = {
     'neutral': ['Daily Check-in', 'Mindfulness']
 }
 
-RISK_KEYWORDS = ['suicide', 'kill myself', 'end my life', 'hurt myself', 'die', 'death', 'jump off']
+RISK_KEYWORDS = ['suicide', 'suicidal', 'kill', 'kill myself', 'end my life', 'hurt myself', 'die', 'death', 'jump off']
 
 GENERAL_RESPONSES = {
     'hello': "Hi there! 👋 How are you feeling today?",
@@ -35,6 +36,59 @@ GENERAL_RESPONSES = {
     'thanks': "You're welcome! Remember, taking care of yourself is important. 🌟",
     'bye': "Take care of yourself! Remember, you've got this. 💪"
 }
+
+# Expanded intent definitions: patterns, canned response, emotion, suggestions
+INTENT_DEFINITIONS = [
+    {
+        'name': 'greeting',
+        'patterns': ['hello', 'hi', 'hey', 'how are you', "good morning", "good evening"],
+        'response': "Hi there! 👋 How are you feeling today?",
+        'emotion': 'neutral',
+        'suggestions': ['Daily Check-in', 'Journaling']
+    },
+    {
+        'name': 'thanks',
+        'patterns': ['thanks', 'thank you', 'thx'],
+        'response': "You're welcome! Remember, taking care of yourself is important. 🌟",
+        'emotion': 'happy',
+        'suggestions': ['Keep going', 'Share a win']
+    },
+    {
+        'name': 'help',
+        'patterns': ['help', 'support', 'assist'],
+        'response': "I'm here to listen and support you. Tell me what's troubling you or how you're feeling.",
+        'emotion': 'neutral',
+        'suggestions': ['Describe how you feel', 'Try breathing exercise']
+    },
+    {
+        'name': 'breathing',
+        'patterns': ['breath', 'breathing', 'breathe'],
+        'response': "Let's do this together. Inhale 4s, hold 7s, exhale 8s. 🌿",
+        'emotion': 'neutral',
+        'suggestions': ['Do it again', 'Calming music']
+    },
+    {
+        'name': 'journaling',
+        'patterns': ['journal', 'journaling', 'write'],
+        'response': "Great choice! Here's a prompt: 'Write about one thing that made you smile today.' 📝",
+        'emotion': 'happy',
+        'suggestions': ['Another prompt', 'I did it!']
+    },
+    {
+        'name': 'mindfulness',
+        'patterns': ['mindful', 'mindfulness', 'meditate', 'meditation'],
+        'response': "Try a short 2-minute mindfulness: notice breath, body, and sounds. 🌟",
+        'emotion': 'neutral',
+        'suggestions': ['Breathing Exercise', 'Guided meditation']
+    },
+    {
+        'name': 'sleep_help',
+        'patterns': ['sleep', 'insomnia', 'cant sleep', "can't sleep"],
+        'response': "Try a wind-down: dim lights, avoid screens, and try 4-7-8 breathing. 🌙",
+        'emotion': 'neutral',
+        'suggestions': ['Wind-down routine', 'Calming music']
+    }
+]
 
 def detect_emotion_fallback(text):
     blob = TextBlob(text)
@@ -71,8 +125,28 @@ def chat():
 
         user_lower = user_message.lower()
 
+        # normalize tokens and punctuation-stripped text for robust matching
+        tokens = set(re.findall(r"\b\w+\b", user_lower))
+        clean_lower = re.sub(r"[^\w\s]", "", user_lower)
+
         # 1. IMMEDIATE RISK DETECTION (Safety First)
-        if any(keyword in user_lower for keyword in RISK_KEYWORDS):
+        # Check phrase keywords against the cleaned text and single-word keywords against token set
+        risk_detected = False
+        matched_keyword = None
+        for keyword in RISK_KEYWORDS:
+            if ' ' in keyword:
+                if keyword in clean_lower:
+                    risk_detected = True
+                    matched_keyword = keyword
+                    break
+            else:
+                if keyword in tokens:
+                    risk_detected = True
+                    matched_keyword = keyword
+                    break
+
+        if risk_detected:
+            print(f"Risk keyword matched: {matched_keyword}")
             return jsonify({
                 'text': "I'm detecting that you might be in distress. Please know you are not alone. It's really important to talk to someone who can help you right now.",
                 'emotion': 'distress',
@@ -97,7 +171,41 @@ def chat():
                 'suggestions': ['Another prompt', 'I did it!']
             })
 
-        # 3. OPENAI GPT RESPONSE
+        # 3. INTENT MATCHING: check expanded intents first, then fallback to GENERAL_RESPONSES
+        tokens = set(re.findall(r"\b\w+\b", user_lower))
+        clean_lower = re.sub(r"[^\w\s]", "", user_lower)
+
+        # check defined intents
+        for intent in INTENT_DEFINITIONS:
+            for pattern in intent['patterns']:
+                if ' ' in pattern:
+                    if pattern in clean_lower:
+                        return jsonify({
+                            'text': intent['response'],
+                            'emotion': intent.get('emotion', 'neutral'),
+                            'risk': False,
+                            'suggestions': intent.get('suggestions', [])
+                        })
+                else:
+                    if pattern in tokens:
+                        return jsonify({
+                            'text': intent['response'],
+                            'emotion': intent.get('emotion', 'neutral'),
+                            'risk': False,
+                            'suggestions': intent.get('suggestions', [])
+                        })
+
+        # fallback: simple GENERAL_RESPONSES (kept for backwards compatibility)
+        for pattern, response in GENERAL_RESPONSES.items():
+            if (len(pattern.split()) == 1 and pattern in tokens) or (len(pattern.split()) > 1 and pattern in clean_lower):
+                return jsonify({
+                    'text': response,
+                    'emotion': 'neutral',
+                    'risk': False,
+                    'suggestions': ['Daily Check-in', 'Journaling']
+                })
+
+        # 4. OPENAI GPT RESPONSE
         try:
             # System prompt to define persona and output format
             system_prompt = """
@@ -156,10 +264,11 @@ def chat():
             print(f"OpenAI Error: {e}")
             # Fallback Intelligence (Simulated AI) when API fails/quota exceeded
             
-            # 1. check general responses (Greetings, etc.)
-            tokens = set(user_lower.split())
+            # 1. check general responses (Greetings, etc.) - robust tokenization
+            tokens = set(re.findall(r"\b\w+\b", user_lower))
+            clean_lower = re.sub(r"[^\w\s]", "", user_lower)
             for pattern, response in GENERAL_RESPONSES.items():
-                if (len(pattern.split()) == 1 and pattern in tokens) or (len(pattern.split()) > 1 and pattern in user_lower):
+                if (len(pattern.split()) == 1 and pattern in tokens) or (len(pattern.split()) > 1 and pattern in clean_lower):
                     return jsonify({
                         'text': response,
                         'emotion': 'neutral',
