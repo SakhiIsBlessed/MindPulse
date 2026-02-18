@@ -1,7 +1,7 @@
-.nav-right .greeting{font-size:0.98rem;color:#fff !important;display:flex;align-items:center;min-width:180px}
-.nav-right .greeting strong{font-weight:600;color:#fff !important}
-.nav-right .greeting{white-space:nowrap;overflow:hidden}
-.nav-right .greeting-caret{margin-left:6px;opacity:0.95;animation:blink 1s steps(2,end) infinite;color:#fff !important}
+.greeting{font-size:0.98rem;color:#fff;display:flex;align-items:center;min-width:180px}
+.greeting strong{font-weight:600}
+.greeting{white-space:nowrap;overflow:hidden}
+.greeting-caret{margin-left:6px;opacity:0.95;animation:blink 1s steps(2,end) infinite;color:#fff}
 @keyframes blink{50%{opacity:0}100%{opacity:1}}
 
 /* Compact avatar used in header */
