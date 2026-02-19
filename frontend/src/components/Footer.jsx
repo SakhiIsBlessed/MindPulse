@@ -103,7 +103,7 @@ const Footer = () => {
           <div className="footer-links-inline">
             <Link to="/privacy">Privacy</Link>
             <span className="sep">•</span>
-            <a href="/#terms">Terms</a>
+            <Link to="/terms">Terms</Link>
           </div>
         </div>
       </div>

@@ -42,7 +42,7 @@ const Login = () => {
       localStorage.setItem('email', data.email);
       setTimeout(() => {
         setLoading(false);
-        navigate('/dashboard');
+        navigate('/home');
       }, 1500);
     } catch (err) {
       console.error('Login error:', err);
@@ -155,41 +155,72 @@ const Login = () => {
   const isInvalidCredentials = error.toLowerCase().includes('invalid');
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      width: '100vw',
-      margin: 0,
-      padding: 0
-    }}>
-      {/* Animated background elements */}
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        width: '100vw',
+        margin: 0,
+        padding: 0,
+        background: 'linear-gradient(135deg, #6366f1 0%, #a21caf 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Animated, colorful background shapes */}
       <div style={{
-        position: 'fixed',
-        top: '-50%',
-        left: '-50%',
-        width: '200%',
-        height: '200%',
-        background: 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%)',
-        pointerEvents: 'none'
+        position: 'absolute',
+        top: '-120px',
+        left: '-120px',
+        width: '340px',
+        height: '340px',
+        background: 'radial-gradient(circle at 60% 40%, #818cf8 0%, #a5b4fc 60%, transparent 100%)',
+        filter: 'blur(30px)',
+        opacity: 0.7,
+        zIndex: 0,
+        pointerEvents: 'none',
       }} />
       <div style={{
-        position: 'fixed',
-        bottom: '-50%',
-        right: '-50%',
-        width: '200%',
-        height: '200%',
-        background: 'radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%)',
-        pointerEvents: 'none'
+        position: 'absolute',
+        bottom: '-100px',
+        right: '-100px',
+        width: '300px',
+        height: '300px',
+        background: 'radial-gradient(circle at 40% 60%, #f472b6 0%, #f9a8d4 60%, transparent 100%)',
+        filter: 'blur(30px)',
+        opacity: 0.6,
+        zIndex: 0,
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '120vw',
+        height: '120vh',
+        background: 'radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.08) 0%, transparent 80%)',
+        zIndex: 0,
+        pointerEvents: 'none',
       }} />
 
-      <div className="glass-card animate-in login-card" style={{
-        width: '100%',
-        maxWidth: '420px',
-        position: 'relative',
-        zIndex: 1
-      }}>
+      <div
+        className="glass-card animate-in login-card"
+        style={{
+          width: '100%',
+          maxWidth: '420px',
+          position: 'relative',
+          zIndex: 2,
+          background: 'rgba(255,255,255,0.95)',
+          boxShadow: '0 8px 32px 0 rgba(99,102,241,0.18), 0 1.5px 8px 0 rgba(236,72,153,0.10)',
+          borderRadius: '1.5rem',
+          border: '1.5px solid rgba(99,102,241,0.10)',
+          padding: '2.5rem 2rem',
+          backdropFilter: 'blur(12px)',
+        }}
+      >
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.6rem' }}>
           <motion.div
@@ -211,10 +242,27 @@ const Login = () => {
             />
           </motion.div>
 
-          <h2 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)' }}>
+          <h2
+            style={{
+              margin: '0 0 0.5rem 0',
+              color: '#7c3aed',
+              fontWeight: 800,
+              fontSize: '2.1rem',
+              letterSpacing: '-1px',
+              textShadow: '0 2px 12px #a5b4fc44',
+            }}
+          >
             Welcome Back
           </h2>
-          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
+          <p
+            style={{
+              color: '#a21caf',
+              margin: 0,
+              fontSize: '1.05rem',
+              fontWeight: 500,
+              letterSpacing: '0.01em',
+            }}
+          >
             Track your mental wellness journey
           </p>
         </div>
@@ -283,12 +331,23 @@ const Login = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email" style={{ color: '#7c3aed', fontWeight: 600 }}>Email Address</label>
             <input
               id="email"
               type="email"
               placeholder="you@example.com"
               className="input-field"
+              style={{
+                border: '1.5px solid #a5b4fc',
+                borderRadius: '0.75rem',
+                padding: '0.85rem 1rem',
+                fontSize: '1rem',
+                marginTop: '0.3rem',
+                background: '#f5f3ff',
+                color: '#312e81',
+                outline: 'none',
+                boxShadow: '0 1.5px 8px 0 #a5b4fc22',
+              }}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -297,13 +356,24 @@ const Login = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password" style={{ color: '#7c3aed', fontWeight: 600 }}>Password</label>
             <div className="input-wrapper">
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Your secure password"
                 className="input-field"
+                style={{
+                  border: '1.5px solid #f472b6',
+                  borderRadius: '0.75rem',
+                  padding: '0.85rem 1rem',
+                  fontSize: '1rem',
+                  marginTop: '0.3rem',
+                  background: '#fdf2f8',
+                  color: '#701a75',
+                  outline: 'none',
+                  boxShadow: '0 1.5px 8px 0 #f472b622',
+                }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -314,6 +384,7 @@ const Login = () => {
                 onClick={() => setShowPassword(s => !s)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 className="password-toggle"
+                style={{ background: 'none', border: 'none', marginLeft: '-2.2rem', marginTop: '0.4rem', color: '#a21caf', cursor: 'pointer' }}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -324,6 +395,7 @@ const Login = () => {
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
                 className="forgot-link"
+                style={{ color: '#a21caf', background: 'none', border: 'none', fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '0.97rem' }}
               >
                 Forgot your password?
               </button>
@@ -333,7 +405,23 @@ const Login = () => {
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: '100%', marginTop: '1rem' }}
+            style={{
+              width: '100%',
+              marginTop: '1rem',
+              background: 'linear-gradient(90deg, #6366f1 0%, #a21caf 100%)',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '1.1rem',
+              border: 'none',
+              borderRadius: '0.9rem',
+              boxShadow: '0 2px 12px #a5b4fc33',
+              padding: '0.9rem 0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'background 0.2s',
+            }}
             disabled={loading}
           >
             <LogIn size={20} style={{ marginRight: '0.5rem' }} />
@@ -355,7 +443,28 @@ const Login = () => {
         </div>
 
         <Link to="/register" style={{ textDecoration: 'none' }}>
-          <button type="button" className="btn btn-secondary" style={{ width: '100%' }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{
+              width: '100%',
+              background: 'linear-gradient(90deg, #f472b6 0%, #6366f1 100%)',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '1.1rem',
+              border: 'none',
+              borderRadius: '0.9rem',
+              boxShadow: '0 2px 12px #f472b633',
+              padding: '0.9rem 0',
+              marginTop: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'background 0.2s',
+            }}
+            onClick={() => navigate('/home')}
+          >
             Create an Account
           </button>
         </Link>
