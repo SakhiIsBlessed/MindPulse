@@ -14,6 +14,7 @@ import Chatbot from './components/Chatbot';
 import About from './pages/About';
 import Careers from './pages/Careers';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 import FloatingSupport from './components/FloatingSupport';
 import { ThemeProvider } from './context/ThemeContext';
 import PageWrapper from './components/PageWrapper';
@@ -38,6 +39,7 @@ function AppContent() {
         <Route path="/about" element={<About />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       

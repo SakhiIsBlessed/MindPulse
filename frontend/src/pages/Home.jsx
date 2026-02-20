@@ -1103,15 +1103,20 @@ const Home = () => {
                         <motion.button
                             className="btn btn-primary"
                             onClick={() => navigate("/register")}
-                            whileHover={{ scale: 1.08 }}
+                            whileHover={{ scale: 1.08, boxShadow: "0 8px 32px 0 #fff6, 0 1.5px 8px 0 #a5b4fc44" }}
                             whileTap={{ scale: 0.96 }}
                             style={{
                                 padding: "1rem 2.5rem",
-                                fontSize: "1rem",
-                                fontWeight: 700,
-                                backgroundColor: "white",
+                                fontSize: "1.1rem",
+                                fontWeight: 800,
+                                background: "#fff",
                                 color: "#6c5ce7",
-                                border: "none",
+                                border: "2.5px solid #fff",
+                                borderRadius: "1.2rem",
+                                boxShadow: "0 2px 16px #fff8, 0 1.5px 8px 0 #a5b4fc44",
+                                letterSpacing: "0.01em",
+                                transition: "background 0.2s, color 0.2s",
+                                outline: "none",
                             }}
                         >
                             Sign Up Free
