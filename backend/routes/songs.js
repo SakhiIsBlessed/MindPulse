@@ -61,7 +61,7 @@ const upload = multer({
 // GET all songs for current user
 router.get('/', protect, async (req, res) => {
   try {
-    const songs = await Song.find({ userId: req.user.id })
+    const songs = await Song.find({ userId: String(req.user.id) })
       .select('-filename')
       .sort({ createdAt: -1 });
     res.json(songs);
@@ -87,7 +87,7 @@ router.post('/', protect, upload.single('song'), async (req, res) => {
     console.log('Creating song record:', { title, url, userId: req.user.id });
 
     const song = new Song({
-      userId: req.user.id,
+      userId: String(req.user.id),
       title,
       filename: req.file.filename,
       url,
@@ -130,7 +130,7 @@ router.use((error, req, res, next) => {
 // DELETE a song
 router.delete('/:id', protect, async (req, res) => {
   try {
-    const song = await Song.findOne({ _id: req.params.id, userId: req.user.id });
+    const song = await Song.findOne({ _id: req.params.id, userId: String(req.user.id) });
     if (!song) {
       return res.status(404).json({ error: 'Song not found' });
     }

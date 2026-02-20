@@ -20,4 +20,27 @@
 .nav-links .nav-link:hover{transform:translateY(-3px) scale(1.02)}
 
 /* Keep notif dot visible sizing consistent */
-.notif-dot{width:8px;height:8px;border-radius:50%;background:#ff4d6d;display:inline-block;margin-left:6px}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#ff4d6d;display:inline-block;margin-left:6px;animation:pulse-dot 2s ease-in-out infinite;box-shadow:0 0 8px rgba(255,77,109,0.6)}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 8px rgba(255,77,109,0.6)}50%{box-shadow:0 0 12px rgba(255,77,109,0.8)}}
+
+/* Notification panel styling */
+.notif-panel{background:linear-gradient(135deg,rgba(255,255,255,0.95) 0%,rgba(248,247,255,0.95) 100%);backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 20px 60px rgba(108,92,231,0.15),0 0 1px rgba(15,23,42,0.08);border:1px solid rgba(108,92,231,0.1)}
+
+.notif-header{background:linear-gradient(135deg,#6c5ce7 0%,#8b5cf6 100%);color:#fff;border-radius:12px 12px 0 0;padding:1rem;font-weight:700;letter-spacing:0.3px}
+
+.notif-item{transition:all .2s ease;border-bottom:1px solid rgba(15,23,42,0.04);padding:0.9rem 1rem;cursor:pointer;position:relative}
+.notif-item:hover{background:rgba(108,92,231,0.05);border-left:3px solid #6c5ce7;padding-left:calc(1rem - 3px)}
+.notif-item:last-child{border-bottom:none}
+
+.notif-item-title{font-weight:700;color:#1a1a2e;font-size:0.95rem;margin-bottom:4px}
+.notif-item-body{font-size:0.875rem;color:#555;line-height:1.4}
+.notif-item-time{font-size:0.75rem;color:#999;margin-top:6px;font-style:italic}
+
+.notif-empty{padding:1.5rem;text-align:center;color:#999;font-size:0.9rem}
+
+.notif-btn{transition:all .2s ease;border-radius:6px;padding:0.4rem 0.6rem;font-size:0.8rem;font-weight:600;border:none;cursor:pointer}
+.notif-btn-secondary{background:rgba(108,92,231,0.08);color:#6c5ce7;border:1px solid rgba(108,92,231,0.2)}
+.notif-btn-secondary:hover{background:rgba(108,92,231,0.12);border-color:#6c5ce7;transform:translateY(-1px)}
+
+.notif-btn-primary{background:linear-gradient(135deg,#6c5ce7,#8b5cf6);color:#fff;border:none}
+.notif-btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(108,92,231,0.3)}

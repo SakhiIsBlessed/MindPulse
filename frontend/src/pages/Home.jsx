@@ -65,7 +65,7 @@ const Home = () => {
         <div
             style={{
                 minHeight: "100vh",
-                background: "linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #f0f4ff 100%)",
+                background: "linear-gradient(135deg, #f5f3ff 0%, #faf9ff 50%, #f0f7ff 100%)",
                 padding: "2rem",
                 overflow: "hidden",
                 position: "relative",
@@ -74,7 +74,7 @@ const Home = () => {
             {/* Animated background elements */}
             <motion.div
                 animate={{
-                    opacity: [0.1, 0.2, 0.1],
+                    opacity: [0.12, 0.22, 0.12],
                 }}
                 transition={{ duration: 4, repeat: Infinity }}
                 style={{
@@ -83,7 +83,7 @@ const Home = () => {
                     right: "5%",
                     width: "300px",
                     height: "300px",
-                    background: "radial-gradient(circle, #8b5cf6 0%, transparent 70%)",
+                    background: "radial-gradient(circle, #7C3AED 0%, transparent 70%)",
                     borderRadius: "50%",
                     filter: "blur(60px)",
                     zIndex: 0,
@@ -100,7 +100,7 @@ const Home = () => {
                     left: "5%",
                     width: "250px",
                     height: "250px",
-                    background: "radial-gradient(circle, #06b6d4 0%, transparent 70%)",
+                    background: "radial-gradient(circle, #0891b2 0%, transparent 70%)",
                     borderRadius: "50%",
                     filter: "blur(50px)",
                     zIndex: 0,
@@ -143,7 +143,7 @@ const Home = () => {
                             fontSize: "3.5rem",
                             marginBottom: "0.5rem",
                             fontWeight: 800,
-                            background: "linear-gradient(135deg, #6c5ce7 0%, #8b5cf6 100%)",
+                            background: "linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%)",
                             WebkitBackgroundClip: "text",
                             WebkitTextFillColor: "transparent",
                             backgroundClip: "text",
@@ -190,7 +190,7 @@ const Home = () => {
                         <motion.button
                             className="btn btn-primary"
                             onClick={() => navigate("/dashboard")}
-                            whileHover={{ scale: 1.05, boxShadow: "0 12px 40px rgba(108, 92, 231, 0.3)" }}
+                            whileHover={{ scale: 1.05, boxShadow: "0 12px 40px rgba(124, 58, 237, 0.3)" }}
                             whileTap={{ scale: 0.98 }}
                             style={{
                                 padding: "0.9rem 2rem",
@@ -242,20 +242,20 @@ const Home = () => {
                             key={index}
                             variants={itemVariants}
                             className="glass-card"
-                            whileHover={{ y: -8, boxShadow: "0 20px 50px rgba(108, 92, 231, 0.2)" }}
+                            whileHover={{ y: -8, boxShadow: "0 20px 50px rgba(124, 58, 237, 0.2)" }}
                             style={{
                                 padding: "2rem",
                                 textAlign: "center",
                                 background: "rgba(255, 255, 255, 0.9)",
                                 backdropFilter: "blur(10px)",
-                                border: "1px solid rgba(108, 92, 231, 0.1)",
+                                border: "1px solid rgba(124, 58, 237, 0.1)",
                             }}
                         >
                             <div
                                 style={{
                                     fontSize: "2.5rem",
                                     fontWeight: 800,
-                                    background: "linear-gradient(135deg, #6c5ce7 0%, #8b5cf6 100%)",
+                                    background: "linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%)",
                                     WebkitBackgroundClip: "text",
                                     WebkitTextFillColor: "transparent",
                                     backgroundClip: "text",
@@ -307,55 +307,55 @@ const Home = () => {
                                 icon: <Heart size={32} />,
                                 title: "Mood Tracking",
                                 text: "Record daily emotions with beautiful visualizations and discover patterns in your emotional state.",
-                                color: "#ff6b6b",
+                                color: "#E11D48",
                             },
                             {
                                 icon: <BookOpen size={32} />,
                                 title: "Private Journaling",
                                 text: "Safe, encrypted space to express thoughts and feelings freely with rich text formatting.",
-                                color: "#4ecdc4",
+                                color: "#0891b2",
                             },
                             {
                                 icon: <Brain size={32} />,
                                 title: "AI-Powered Insights",
                                 text: "Get intelligent analysis of your emotional patterns, triggers, and trends with personalized recommendations.",
-                                color: "#8b5cf6",
+                                color: "#7C3AED",
                             },
                             {
                                 icon: <TrendingUp size={32} />,
                                 title: "Progress Tracking",
                                 text: "Visualize your mental health journey with interactive charts and meaningful statistics.",
-                                color: "#06b6d4",
+                                color: "#0D9488",
                             },
                             {
                                 icon: <Music size={32} />,
                                 title: "Music Therapy",
                                 text: "Share and discover healing music tailored to your emotional wellness journey.",
-                                color: "#ec4899",
+                                color: "#DA3B78",
                             },
                             {
                                 icon: <MessageSquare size={32} />,
                                 title: "AI Chatbot Support",
                                 text: "24/7 intelligent companion offering emotional support, coping strategies, and wellness guidance.",
-                                color: "#f59e0b",
+                                color: "#2563eb",
                             },
                             {
                                 icon: <Zap size={32} />,
                                 title: "Quick Check-ins",
                                 text: "Fast mood logging with just a few seconds of your time - perfect for busy days.",
-                                color: "#fbbf24",
+                                color: "#c2410c",
                             },
                             {
                                 icon: <Shield size={32} />,
                                 title: "Privacy First",
                                 text: "Your data is encrypted, secured with industry standards, and completely private.",
-                                color: "#34d399",
+                                color: "#059669",
                             },
                             {
                                 icon: <Lightbulb size={32} />,
                                 title: "Personalized Insights",
                                 text: "Receive actionable tips and wellness suggestions based on your unique emotional profile.",
-                                color: "#a78bfa",
+                                color: "#5B21B6",
                             },
                         ].map((feature, index) => (
                             <motion.div
@@ -363,7 +363,7 @@ const Home = () => {
                                 variants={itemVariants}
                                 whileHover={{
                                     y: -12,
-                                    boxShadow: "0 25px 60px rgba(108, 92, 231, 0.15)",
+                                    boxShadow: "0 25px 60px rgba(124, 58, 237, 0.15)",
                                 }}
                                 className="glass-card"
                                 style={{
@@ -449,7 +449,7 @@ const Home = () => {
                     style={{
                         padding: "3rem 2rem",
                         marginBottom: "3rem",
-                        background: "linear-gradient(135deg, rgba(108, 92, 231, 0.95) 0%, rgba(139, 92, 246, 0.95) 100%)",
+                        background: "linear-gradient(135deg, rgba(91, 33, 182, 0.95) 0%, rgba(124, 58, 237, 0.95) 100%)",
                         color: "white",
                         textAlign: "center",
                         borderRadius: "2rem",
@@ -522,7 +522,7 @@ const Home = () => {
                         textAlign: "center",
                         background: "linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)",
                         borderRadius: "2rem",
-                        border: "2px solid rgba(108, 92, 231, 0.2)",
+                        border: "2px solid rgba(124, 58, 237, 0.2)",
                         marginBottom: "3rem",
                     }}
                 >
@@ -628,13 +628,13 @@ const Home = () => {
                                     padding: "2rem",
                                     background: "rgba(255, 255, 255, 0.95)",
                                     backdropFilter: "blur(10px)",
-                                    border: "1px solid rgba(108, 92, 231, 0.1)",
+                                    border: "1px solid rgba(124, 58, 237, 0.1)",
                                     borderRadius: "1.5rem",
                                     position: "relative",
                                 }}
                                 whileHover={{
                                     y: -8,
-                                    boxShadow: "0 20px 50px rgba(108, 92, 231, 0.15)",
+                                    boxShadow: "0 20px 50px rgba(124, 58, 237, 0.15)",
                                 }}
                             >
                                 <div
@@ -642,7 +642,7 @@ const Home = () => {
                                         width: "50px",
                                         height: "50px",
                                         borderRadius: "50%",
-                                        background: "linear-gradient(135deg, #6c5ce7 0%, #8b5cf6 100%)",
+                                        background: "linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%)",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -674,7 +674,7 @@ const Home = () => {
                     className="glass-card"
                     style={{
                         padding: "3rem 2rem",
-                        background: "linear-gradient(135deg, rgba(139, 92, 246, 0.95) 0%, rgba(108, 92, 231, 0.95) 100%)",
+                        background: "linear-gradient(135deg, rgba(124, 58, 237, 0.95) 0%, rgba(91, 33, 182, 0.95) 100%)",
                         color: "white",
                         borderRadius: "2rem",
                         border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -806,13 +806,13 @@ const Home = () => {
                                 className="glass-card"
                                 whileHover={{
                                     y: -8,
-                                    boxShadow: "0 20px 50px rgba(108, 92, 231, 0.15)",
+                                    boxShadow: "0 20px 50px rgba(124, 58, 237, 0.15)",
                                 }}
                                 style={{
                                     padding: "2.5rem",
                                     background: "rgba(255, 255, 255, 0.95)",
                                     backdropFilter: "blur(10px)",
-                                    border: "1px solid rgba(108, 92, 231, 0.1)",
+                                    border: "1px solid rgba(124, 58, 237, 0.1)",
                                     borderRadius: "1.5rem",
                                 }}
                             >
@@ -822,7 +822,7 @@ const Home = () => {
                                             width: "50px",
                                             height: "50px",
                                             borderRadius: "50%",
-                                            background: "linear-gradient(135deg, #6c5ce7 0%, #8b5cf6 100%)",
+                                            background: "linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%)",
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
@@ -852,7 +852,7 @@ const Home = () => {
                                 >
                                     "{testimonial.quote}"
                                 </p>
-                                <div style={{ display: "flex", color: "#fbbf24", marginTop: "1rem" }}>
+                                <div style={{ display: "flex", color: "#7C3AED", marginTop: "1rem" }}>
                                     {[...Array(5)].map((_, i) => (
                                         <span key={i} style={{ fontSize: "1.2rem" }}>★</span>
                                     ))}
@@ -871,7 +871,7 @@ const Home = () => {
                     className="glass-card"
                     style={{
                         padding: "3rem 2rem",
-                        background: "linear-gradient(135deg, rgba(236, 72, 153, 0.95) 0%, rgba(244, 114, 182, 0.95) 100%)",
+                        background: "linear-gradient(135deg, rgba(210, 59, 120, 0.95) 0%, rgba(244, 114, 182, 0.95) 100%)",
                         color: "white",
                         borderRadius: "2rem",
                         border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -934,7 +934,7 @@ const Home = () => {
                     className="glass-card"
                     style={{
                         padding: "3rem 2rem",
-                        background: "linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(96, 165, 250, 0.95) 100%)",
+                        background: "linear-gradient(135deg, rgba(8, 145, 178, 0.95) 0%, rgba(34, 197, 231, 0.95) 100%)",
                         color: "white",
                         borderRadius: "2rem",
                         border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -997,7 +997,7 @@ const Home = () => {
                     style={{
                         background: "linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)",
                         borderRadius: "2rem",
-                        border: "1px solid rgba(108, 92, 231, 0.1)",
+                        border: "1px solid rgba(124, 58, 237, 0.1)",
                         padding: "3rem 2rem",
                         marginBottom: "3rem",
                     }}
@@ -1033,13 +1033,13 @@ const Home = () => {
                                 transition={{ duration: 0.6, delay: index * 0.1 }}
                                 viewport={{ once: true }}
                                 className="glass-card"
-                                whileHover={{ y: -8, boxShadow: "0 20px 50px rgba(108, 92, 231, 0.15)" }}
+                                whileHover={{ y: -8, boxShadow: "0 20px 50px rgba(124, 58, 237, 0.15)" }}
                                 style={{
                                     padding: "2rem",
                                     textAlign: "center",
                                     background: "rgba(255, 255, 255, 0.9)",
                                     backdropFilter: "blur(10px)",
-                                    border: "1px solid rgba(108, 92, 231, 0.1)",
+                                    border: "1px solid rgba(124, 58, 237, 0.1)",
                                     borderRadius: "1.5rem",
                                 }}
                             >
@@ -1050,7 +1050,7 @@ const Home = () => {
                                     style={{
                                         fontSize: "2.5rem",
                                         fontWeight: 800,
-                                        background: "linear-gradient(135deg, #6c5ce7 0%, #8b5cf6 100%)",
+                                        background: "linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%)",
                                         WebkitBackgroundClip: "text",
                                         WebkitTextFillColor: "transparent",
                                         backgroundClip: "text",
@@ -1077,7 +1077,7 @@ const Home = () => {
                     style={{
                         padding: "3rem 2rem",
                         textAlign: "center",
-                        background: "linear-gradient(135deg, #6c5ce7 0%, #8b5cf6 100%)",
+                        background: "linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%)",
                         color: "white",
                         borderRadius: "2rem",
                         border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -1103,17 +1103,17 @@ const Home = () => {
                         <motion.button
                             className="btn btn-primary"
                             onClick={() => navigate("/register")}
-                            whileHover={{ scale: 1.08, boxShadow: "0 8px 32px 0 #fff6, 0 1.5px 8px 0 #a5b4fc44" }}
+                            whileHover={{ scale: 1.08, boxShadow: "0 8px 32px 0 #fff6, 0 1.5px 8px 0 #a78bfa44" }}
                             whileTap={{ scale: 0.96 }}
                             style={{
                                 padding: "1rem 2.5rem",
                                 fontSize: "1.1rem",
                                 fontWeight: 800,
                                 background: "#fff",
-                                color: "#6c5ce7",
+                                color: "#5B21B6",
                                 border: "2.5px solid #fff",
                                 borderRadius: "1.2rem",
-                                boxShadow: "0 2px 16px #fff8, 0 1.5px 8px 0 #a5b4fc44",
+                                boxShadow: "0 2px 16px #fff8, 0 1.5px 8px 0 #a78bfa44",
                                 letterSpacing: "0.01em",
                                 transition: "background 0.2s, color 0.2s",
                                 outline: "none",

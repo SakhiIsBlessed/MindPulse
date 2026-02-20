@@ -24,6 +24,39 @@ const Navbar = ({ userName = 'User' }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Inspiration samples
+  const inspirationSamples = [
+    { title: 'Motivation', body: 'You got this! Small steps every day lead to big change.' },
+    { title: 'Healthy Habit', body: 'Drink a glass of water and take a 5-minute walk.' },
+    { title: 'Skin Care Tip', body: 'Remember to apply SPF today to protect your skin.' },
+    { title: 'Health Reminder', body: 'Take a deep breath — a short break helps your focus.' },
+  ];
+
+  const startPeriodicNotifications = () => {
+    // Only start if not already running
+    const saved = localStorage.getItem('mp_notif_interval');
+    if (saved) return;
+
+    const intervalId = setInterval(() => {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        const sample = inspirationSamples[Math.floor(Math.random() * inspirationSamples.length)];
+        try {
+          new Notification(sample.title, {
+            body: sample.body,
+            tag: 'mindpulse-inspiration',
+          });
+          const item = { id: Date.now(), title: sample.title, body: sample.body, ts: Date.now(), read: false };
+          setNotifications((s) => [item, ...s]);
+        } catch (err) {
+          console.error('Failed to send periodic notification', err);
+        }
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    timersRef.current.push(intervalId);
+    localStorage.setItem('mp_notif_interval', String(intervalId));
+  };
+
   // Animated greeting - simple typewriter + fade/slide entrance
   const AnimatedGreeting = ({ userName }) => {
     const [display, setDisplay] = useState('');
@@ -86,6 +119,11 @@ const Navbar = ({ userName = 'User' }) => {
     } catch (e) {
       console.error('Failed to load notifications', e);
     }
+
+    // Start periodic notifications if already granted
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      startPeriodicNotifications();
+    }
   }, []);
 
   useEffect(() => {
@@ -112,13 +150,6 @@ const Navbar = ({ userName = 'User' }) => {
   };
 
   const initials = (userName || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-
-  const inspirationSamples = [
-    { title: 'Motivation', body: 'You got this! Small steps every day lead to big change.' },
-    { title: 'Healthy Habit', body: 'Drink a glass of water and take a 5-minute walk.' },
-    { title: 'Skin Care Tip', body: 'Remember to apply SPF today to protect your skin.' },
-    { title: 'Health Reminder', body: 'Take a deep breath — a short break helps your focus.' },
-  ];
 
   const showRandomInspiration = () => {
     if (typeof Notification === 'undefined') {
@@ -165,6 +196,8 @@ const Navbar = ({ userName = 'User' }) => {
         if (permission === 'granted') {
           showRandomInspiration();
           setToast({ message: 'Notifications enabled — enjoy your daily inspiration!', type: 'success' });
+          // Start periodic notifications every 5 minutes
+          startPeriodicNotifications();
         } else {
           setToast({ message: 'Notifications blocked. You can enable them in browser settings.', type: 'error' });
         }
@@ -185,24 +218,6 @@ const Navbar = ({ userName = 'User' }) => {
   const addNotification = (title, body) => {
     const item = { id: Date.now(), title, body, ts: Date.now(), read: false };
     setNotifications((s) => [item, ...s]);
-    setShowNotifications(true);
-  };
-
-  // schedule a notification after a delay (ms)
-  const scheduleNotification = (title, body, delay = 5 * 60 * 1000) => {
-    const timeoutId = setTimeout(() => {
-      try {
-        // show browser notification when permitted
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          new Notification(title, { body, tag: 'mindpulse-scheduled' });
-        }
-      } catch (e) {
-        console.error('Notification failed', e);
-      }
-      addNotification(title, body);
-    }, delay);
-    timersRef.current.push(timeoutId);
-    setToast({ message: `Scheduled notification in ${Math.round(delay / 60000)} minute(s)`, type: 'success' });
     setShowNotifications(true);
   };
 
@@ -279,35 +294,39 @@ const Navbar = ({ userName = 'User' }) => {
             {showNotifications && (
               <motion.div
                 key="notif-menu"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.15 }}
-                style={{ position: 'absolute', right: 16, top: 64, width: 320, zIndex: 2000 }}
+                initial={{ opacity: 0, y: -12, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -12, scale: 0.95 }}
+                transition={{ duration: 0.2, type: 'spring', stiffness: 300, damping: 20 }}
+                style={{ position: 'absolute', right: 16, top: 64, width: 340, zIndex: 2000 }}
               >
-                <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1rem', borderBottom: '1px solid rgba(15,23,42,0.04)' }}>
-                    <strong>Notifications</strong>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <button className="btn btn-secondary" onClick={() => scheduleNotification('Inspiration', 'You got this! Take a short break.', 5 * 60 * 1000)}>Schedule (5m)</button>
-                      <button className="btn btn-secondary" onClick={clearNotifications}>Clear</button>
-                    </div>
+                <div className="notif-panel" style={{ overflow: 'hidden' }}>
+                  <div className="notif-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>🔔 Notifications</div>
+                    <button className="notif-btn notif-btn-secondary" onClick={clearNotifications} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }} title="Clear all notifications">Clear</button>
                   </div>
-                  <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+                  <div style={{ maxHeight: 360, overflowY: 'auto', scrollBehavior: 'smooth' }}>
                     {notifications.length === 0 ? (
-                      <div style={{ padding: '1rem', color: 'var(--text-muted)' }}>No notifications</div>
+                      <div className="notif-empty">✨ No notifications yet. Stay tuned!</div>
                     ) : (
-                      notifications.map(n => (
-                        <div key={n.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(15,23,42,0.02)', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                      notifications.map((n, idx) => (
+                        <motion.div
+                          key={n.id}
+                          className="notif-item"
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}
+                        >
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 700 }}>{n.title}</div>
-                            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{n.body}</div>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>{new Date(n.ts).toLocaleString()}</div>
+                            <div className="notif-item-title">{n.title}</div>
+                            <div className="notif-item-body">{n.body}</div>
+                            <div className="notif-item-time">{new Date(n.ts).toLocaleString()}</div>
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginLeft: 8 }}>
-                            {!n.read && <button className="btn btn-primary" style={{ padding: '0.4rem 0.5rem' }} onClick={() => markRead(n.id)}>Mark</button>}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-start' }}>
+                            {!n.read && <button className="notif-btn notif-btn-primary" onClick={() => markRead(n.id)} title="Mark as read">✓</button>}
                           </div>
-                        </div>
+                        </motion.div>
                       ))
                     )}
                   </div>

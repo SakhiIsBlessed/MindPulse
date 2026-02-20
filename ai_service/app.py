@@ -103,14 +103,14 @@ def analyze_sentiment():
         data = request.get_json()
         if not data or 'text' not in data:
             return jsonify({'error': 'No text provided'}), 400
-        
+       
         text = data['text']
         blob = TextBlob(text)
-        
+       
         return jsonify({
             'polarity': blob.sentiment.polarity,
             'subjectivity': blob.sentiment.subjectivity
-        }) 
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -119,7 +119,7 @@ def chat():
     try:
         data = request.get_json()
         user_message = data.get('message', '')
-        
+       
         if not user_message:
             return jsonify({'error': 'Message is required'}), 400
 
@@ -162,7 +162,7 @@ def chat():
                 'risk': False,
                 'suggestions': ['Do it again', 'Try calm music']
             })
-        
+       
         if 'journaling' in user_lower:
             return jsonify({
                 'text': "Great choice! Here is a prompt: 'Write about one thing that made you smile today, no matter how small.' 📝",
@@ -211,13 +211,13 @@ def chat():
             system_prompt = """
             You are MindPulse, a caring, empathetic, and friendly mental wellness companion for students.
             Your goal is to provide emotional support, listen without judgment, and offer gentle wellness advice.
-            
+           
             IMPORTANT:
             - Keep responses SHORT (under 2 sentences) and conversational.
             - Use comforting emojis (🌿, 💜, 🌟, 🧘‍♀️).
             - Detect the user's emotion (happy, sad, stressed, anxious, neutral).
             - Suggest 1-2 relevant short actions (e.g., "Take a breath", "Listen to music").
-            
+           
             OUTPUT FORMAT:
             You must return the response in this exact format (no markdown):
             Perspective: [Emotion]
@@ -225,7 +225,7 @@ def chat():
             """
 
             completion = client.chat.completions.create(
-                model="gpt-4o-mini", 
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
@@ -235,12 +235,12 @@ def chat():
             )
 
             gpt_content = completion.choices[0].message.content
-            
+           
             # Simple parsing of the custom format
             # Fallback values
             ai_text = gpt_content
             emotion = "neutral"
-            
+           
             lines = gpt_content.split('\n')
             for line in lines:
                 if line.startswith("Perspective:"):
@@ -252,7 +252,7 @@ def chat():
             valid_emotions = ['happy', 'sad', 'stressed', 'anxious', 'neutral']
             if emotion not in valid_emotions:
                 emotion = 'neutral'
-                
+               
             return jsonify({
                 'text': ai_text,
                 'emotion': emotion,
@@ -263,7 +263,7 @@ def chat():
         except Exception as e:
             print(f"OpenAI Error: {e}")
             # Fallback Intelligence (Simulated AI) when API fails/quota exceeded
-            
+           
             # 1. check general responses (Greetings, etc.) - robust tokenization
             tokens = set(re.findall(r"\b\w+\b", user_lower))
             clean_lower = re.sub(r"[^\w\s]", "", user_lower)
@@ -279,7 +279,7 @@ def chat():
             # 2. Emotion-based response
             emotion = detect_emotion_fallback(user_message)
             response_text = random.choice(WELLNESS_SUGGESTIONS.get(emotion, WELLNESS_SUGGESTIONS['neutral']))
-            
+           
             return jsonify({
                 'text': response_text,
                 'emotion': emotion,
