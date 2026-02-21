@@ -124,7 +124,7 @@ const Profile = ({ user = {} }) => {
       {/* Profile Header */}
       <motion.div className="profile-header-section" variants={cardVariants}>
         <div className="profile-header-content">
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', width: '80px', height: '80px' }}>
             <img
               src={getGravatarUrl(email, 200)}
               alt={username}
@@ -141,7 +141,17 @@ const Profile = ({ user = {} }) => {
               }}
             />
             {!email && (
-              <div className="avatar-initials">{(username || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}</div>
+              <div
+                className="avatar-initials"
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)'
+                }}
+              >
+                {(username || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+              </div>
             )}
           </div>
           <div className="profile-header-info">

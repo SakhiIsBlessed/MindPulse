@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const cron = require('node-cron');
+// const cron = require('node-cron');
 const Subscription = require('../models/Subscription');
 
 // Transporter cache and metadata
@@ -464,6 +464,8 @@ const sendDailyEmail = async (email) => {
  * Schedule daily email at 9:00 AM
  */
 const startDailyEmailJob = () => {
+  console.log('⚠️ Daily email scheduler service is temporarily disabled (missing node-cron).');
+  /*
   // Cron expression for 9:00 AM every day: '0 9 * * *'
   cron.schedule('0 9 * * *', async () => {
     console.log('⏰ Running daily email job...');
@@ -478,7 +480,8 @@ const startDailyEmailJob = () => {
       console.error('❌ Error in daily email job:', error);
     }
   });
-  console.log('🚀 Daily email scheduler service started.');
+  */
+  console.log('🚀 (Mock) Daily email scheduler service started.');
 };
 
 module.exports = {
