@@ -1,6 +1,5 @@
-.greeting{font-size:0.98rem;color:#fff;display:flex;align-items:center;min-width:180px}
+.greeting{font-size:0.98rem;color:#fff;display:flex;align-items:center;/* allow shrinking if space is tight */flex-shrink:1;min-width:0;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .greeting strong{font-weight:600}
-.greeting{white-space:nowrap;overflow:hidden}
 .greeting-caret{margin-left:6px;opacity:0.95;animation:blink 1s steps(2,end) infinite;color:#fff}
 @keyframes blink{50%{opacity:0}100%{opacity:1}}
 
@@ -44,3 +43,8 @@
 
 .notif-btn-primary{background:linear-gradient(135deg,#6c5ce7,#8b5cf6);color:#fff;border:none}
 .notif-btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(108,92,231,0.3)}
+
+/* hide greeting on small screens to prevent wrapping */
+@media (max-width:880px){
+  .greeting{display:none}
+}

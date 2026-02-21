@@ -18,6 +18,10 @@ import Terms from './pages/Terms';
 import FloatingSupport from './components/FloatingSupport';
 import { ThemeProvider } from './context/ThemeContext';
 import PageWrapper from './components/PageWrapper';
+import HabitTracker from './pages/HabitTracker';
+import WellnessLibrary from './pages/WellnessLibrary';
+import StressHelp from './pages/StressHelp';
+import HelpTopic from './pages/HelpTopic';
 
 function AppContent() {
   const location = useLocation();
@@ -40,6 +44,9 @@ function AppContent() {
         <Route path="/careers" element={<Careers />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/habits" element={<PageWrapper title="Habit Tracker" description="Build positive routines"><HabitTracker /></PageWrapper>} />
+        <Route path="/wellness" element={<PageWrapper title="Wellness Library" description="Meditation & mindfulness"><WellnessLibrary /></PageWrapper>} />
+        <Route path="/help/:topic" element={<PageWrapper title="Help"><HelpTopic /></PageWrapper>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       

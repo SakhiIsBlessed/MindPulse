@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Bell, User, Home, FileText, BarChart2, LifeBuoy, LogOut, Menu, X, Brain } from 'lucide-react';
+import { Bell, User, Home, FileText, BarChart2, LifeBuoy, LogOut, Menu, X, Brain, CheckSquare, Leaf } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Toast from './Toast';
+import './Navbar.css';
 
 const navItems = [
   { to: '/home', label: 'Home', icon: <Home size={16} /> },
   { to: '/dashboard', label: 'Dashboard', icon: <Home size={16} /> },
   { to: '/journal', label: 'Journal', icon: <FileText size={16} /> },
   { to: '/insights', label: 'Insights', icon: <BarChart2 size={16} /> },
+  { to: '/habits', label: 'Habits', icon: <CheckSquare size={16} /> },
+  { to: '/wellness', label: 'Wellness', icon: <Leaf size={16} /> },
   { to: '/support', label: 'Support', icon: <LifeBuoy size={16} /> },
 ];
 
@@ -60,9 +63,38 @@ const Navbar = ({ userName = 'User' }) => {
   // Animated greeting - simple typewriter + fade/slide entrance
   const AnimatedGreeting = ({ userName }) => {
     const [display, setDisplay] = useState('');
+    const [prefix, setPrefix] = useState('');
+
+    // choose greeting prefix based on current hour
+    const getGreetingPrefix = () => {
+      const h = new Date().getHours();
+      if (h < 5) return 'Good night';
+      if (h < 12) return 'Good morning';
+      if (h < 17) return 'Good afternoon';
+      if (h < 21) return 'Good evening';
+      return 'Good night';
+    };
+
+    // update prefix when time of day changes
+    useEffect(() => {
+      setPrefix(getGreetingPrefix());
+      const timer = setInterval(() => {
+        const newPref = getGreetingPrefix();
+        if (newPref !== prefix) {
+          setPrefix(newPref);
+        }
+      }, 60 * 1000);
+      return () => clearInterval(timer);
+    }, [prefix]);
+
+    // isolate first name to keep the header compact
+    const firstName = (userName || '')
+      .split(' ')
+      .filter(Boolean)[0] || userName || '';
+
     useEffect(() => {
       let mounted = true;
-      const full = `Good Evening, ${userName} 👋`;
+      const full = `${prefix}, ${firstName} 👋`;
       let idx = 0;
       let deleting = false;
 
@@ -94,11 +126,11 @@ const Navbar = ({ userName = 'User' }) => {
       // kick off
       const starter = setTimeout(tick, 260);
       return () => { mounted = false; clearTimeout(starter); };
-    }, [userName]);
+    }, [prefix, firstName]);
 
     return (
       <motion.div
-        className="greeting"
+        className="welcome greeting"
         style={{ color: '#fff' }}
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}

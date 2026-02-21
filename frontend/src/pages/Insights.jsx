@@ -371,8 +371,141 @@ const Insights = () => {
           </div>
         </motion.div>
       )}
+
+      {/* Monthly Mood Heatmap */}
+      <MoodHeatmap entries={entries} />
     </div>
   );
 };
 
+// ── Monthly Mood Heatmap ──────────────────────────────────────────────────────
+function MoodHeatmap({ entries }) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed
+
+  // Build a map: "YYYY-MM-DD" -> average mood_score
+  const dayMap = {};
+  entries.forEach(e => {
+    const d = new Date(e.createdAt);
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const key = d.toISOString().slice(0, 10);
+      if (!dayMap[key]) dayMap[key] = [];
+      dayMap[key].push(e.mood_score || 3);
+    }
+  });
+
+  const avgMap = {};
+  Object.entries(dayMap).forEach(([k, arr]) => {
+    avgMap[k] = arr.reduce((a, b) => a + b, 0) / arr.length;
+  });
+
+  // Days in month
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstWeekday = new Date(year, month, 1).getDay(); // 0=Sun
+
+  const moodColor = (avg) => {
+    if (!avg) return 'rgba(15,23,42,0.07)';
+    if (avg >= 4.5) return '#10b981'; // great - green
+    if (avg >= 3.5) return '#34d399'; // good - light green
+    if (avg >= 2.5) return '#fbbf24'; // neutral - yellow
+    if (avg >= 1.5) return '#f97316'; // low - orange
+    return '#ef4444';                  // very low - red
+  };
+
+  const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const today = now.getDate();
+  const monthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  return (
+    <motion.div
+      className="glass-card"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.45 }}
+      style={{ marginTop: '1.5rem' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+        <span style={{ fontSize: '1.5rem' }}>📅</span>
+        <div>
+          <h2 style={{ margin: 0 }}>Monthly Mood Heatmap</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>{monthName} — color by average mood</p>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem', alignItems: 'center' }}>
+        {[
+          { color: '#ef4444', label: 'Very Low (1)' },
+          { color: '#f97316', label: 'Low (2)' },
+          { color: '#fbbf24', label: 'Neutral (3)' },
+          { color: '#34d399', label: 'Good (4)' },
+          { color: '#10b981', label: 'Great (5)' },
+          { color: 'rgba(15,23,42,0.07)', label: 'No entry' },
+        ].map(item => (
+          <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            <div style={{ width: 14, height: 14, borderRadius: 3, background: item.color, border: '1px solid rgba(15,23,42,0.08)' }} />
+            {item.label}
+          </div>
+        ))}
+      </div>
+
+      {/* Weekday headers */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
+        {DAYS.map(d => (
+          <div key={d} style={{ textAlign: 'center', fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', padding: '0.2rem 0' }}>
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+        {/* Empty cells for first week offset */}
+        {Array.from({ length: firstWeekday }).map((_, i) => (
+          <div key={`empty-${i}`} />
+        ))}
+        {/* Day cells */}
+        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+          const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const avg = avgMap[key];
+          const isToday = day === today;
+          return (
+            <motion.div
+              key={day}
+              whileHover={{ scale: 1.12, zIndex: 5 }}
+              title={avg ? `Day ${day}: avg mood ${avg.toFixed(1)}` : `Day ${day}: no entry`}
+              style={{
+                aspectRatio: '1',
+                borderRadius: 6,
+                background: moodColor(avg),
+                border: isToday ? '2px solid #6c5ce7' : '1px solid rgba(15,23,42,0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.7rem',
+                fontWeight: isToday ? 800 : 500,
+                color: avg ? 'white' : 'var(--text-muted)',
+                cursor: 'default',
+                boxShadow: isToday ? '0 0 0 2px rgba(108,92,231,0.3)' : 'none',
+                position: 'relative',
+                textShadow: avg ? '0 1px 2px rgba(0,0,0,0.25)' : 'none',
+              }}
+            >
+              {day}
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {Object.keys(avgMap).length === 0 && (
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem', fontSize: '0.9rem' }}>
+          No entries this month yet. Start journaling to see the heatmap! 📝
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
 export default Insights;
+
