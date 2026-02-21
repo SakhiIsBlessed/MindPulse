@@ -58,7 +58,7 @@ const Footer = () => {
             <div className="nav-column">
               <h4 className="footer-section-title">Product</h4>
               <nav className="footer-nav" aria-label="product">
-                {['Dashboard','Journal','Insights','Support'].map((item, idx) => (
+                {['Home','Dashboard','Journal','Insights','Habits','Wellness','Support'].map((item, idx) => (
                   <Link key={idx} to={`/${item.toLowerCase()}`} className="footer-link">
                     <span>{item}</span>
                     <span className="underline" />

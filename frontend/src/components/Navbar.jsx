@@ -263,20 +263,25 @@ const Navbar = ({ userName = 'User' }) => {
 
   return (
     <header className="site-nav">
-      <div className="nav-inner container">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Link to="/dashboard" className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
+      <div className="nav-inner">
+        <div className="nav-left">
+          <Link to="/dashboard" className="logo-container">
             {!imgError ? (
               <motion.img
                 src="/Images/mindpulse-logo.svg"
                 alt="MindPulse"
-                style={{ height: 40, width: 'auto' }}
+                className="logo-img"
                 whileHover={{ rotate: 8, scale: 1.06 }}
                 transition={{ type: 'spring', stiffness: 360 }}
                 onError={() => setImgError(true)}
               />
             ) : (
-              <motion.div whileHover={{ rotate: 8, scale: 1.03 }} transition={{ type: 'spring', stiffness: 360 }} style={{ height: 36, width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-hidden>
+              <motion.div 
+                className="logo-placeholder"
+                whileHover={{ rotate: 8, scale: 1.03 }} 
+                transition={{ type: 'spring', stiffness: 360 }} 
+                aria-hidden
+              >
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MindPulse logo">
                   <defs>
                     <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
@@ -289,33 +294,36 @@ const Navbar = ({ userName = 'User' }) => {
                 </svg>
               </motion.div>
             )}
-            <div className="logo" style={{ fontWeight: 800, fontSize: '1.15rem', background: 'linear-gradient(135deg, #6c5ce7, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: 0, letterSpacing: '-0.5px' }}>MindPulse</div>
+            <div className="logo">MindPulse</div>
           </Link>
+        </div>
 
-          <nav className="nav-links" aria-label="Primary navigation">
+        <nav className="nav-center" aria-label="Primary navigation">
+          <div className="nav-links">
             {navItems.map((item) => {
               const isActive = location.pathname === item.to;
               return (
                 <motion.span
                   key={item.to}
                   whileHover={{ y: -3 }}
-                  style={{ display: 'inline-block' }}
                 >
                   <Link
                     to={item.to}
                     className={`nav-link ${isActive ? 'active' : ''}`}
                   >
                     {item.icon}
-                    <span style={{ marginLeft: 8 }}>{item.label}</span>
+                    <span>{item.label}</span>
                   </Link>
                 </motion.span>
               );
             })}
-          </nav>
-        </div>
+          </div>
+        </nav>
 
         <div className="nav-right">
-          <AnimatedGreeting userName={userName} />
+          <div className="greeting-wrapper">
+            <AnimatedGreeting userName={userName} />
+          </div>
 
           <motion.button className="icon-btn nav-icon" title="Notifications" whileHover={{ scale: 1.06 }} onClick={handleBellToggle} aria-pressed={notifPermission === 'granted'}>
             <Bell />
@@ -330,14 +338,14 @@ const Navbar = ({ userName = 'User' }) => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -12, scale: 0.95 }}
                 transition={{ duration: 0.2, type: 'spring', stiffness: 300, damping: 20 }}
-                style={{ position: 'absolute', right: 16, top: 64, width: 340, zIndex: 2000 }}
+                style={{ position: 'absolute', right: 16, top: 'calc(100% + 10px)', width: 340, zIndex: 2000 }}
               >
-                <div className="notif-panel" style={{ overflow: 'hidden' }}>
-                  <div className="notif-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="notif-panel">
+                  <div className="notif-header">
                     <div>🔔 Notifications</div>
-                    <button className="notif-btn notif-btn-secondary" onClick={clearNotifications} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }} title="Clear all notifications">Clear</button>
+                    <button className="notif-btn notif-btn-secondary" onClick={clearNotifications} title="Clear all notifications">Clear</button>
                   </div>
-                  <div style={{ maxHeight: 360, overflowY: 'auto', scrollBehavior: 'smooth' }}>
+                  <div className="notif-content">
                     {notifications.length === 0 ? (
                       <div className="notif-empty">✨ No notifications yet. Stay tuned!</div>
                     ) : (
@@ -348,14 +356,13 @@ const Navbar = ({ userName = 'User' }) => {
                           initial={{ opacity: 0, x: -8 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.05 }}
-                          style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}
                         >
-                          <div style={{ flex: 1 }}>
+                          <div className="notif-item-info">
                             <div className="notif-item-title">{n.title}</div>
                             <div className="notif-item-body">{n.body}</div>
                             <div className="notif-item-time">{new Date(n.ts).toLocaleString()}</div>
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-start' }}>
+                          <div className="notif-item-actions">
                             {!n.read && <button className="notif-btn notif-btn-primary" onClick={() => markRead(n.id)} title="Mark as read">✓</button>}
                           </div>
                         </motion.div>
@@ -367,7 +374,6 @@ const Navbar = ({ userName = 'User' }) => {
             )}
           </AnimatePresence>
 
-          {/* Compact, theme-matching initial avatar */}
           <motion.button
             className="nav-avatar"
             whileHover={{ scale: 1.06, boxShadow: '0 6px 18px rgba(108,92,231,0.18)' }}
@@ -379,10 +385,9 @@ const Navbar = ({ userName = 'User' }) => {
           </motion.button>
 
           <motion.button className="btn-logout btn-hover" whileHover={{ y: -3, boxShadow: '0 10px 24px rgba(0,0,0,0.08)' }} onClick={doLogout} title="Logout">
-            <LogOut size={14} /> Logout
+            <LogOut size={14} /> <span>Logout</span>
           </motion.button>
 
-          {/* Mobile menu toggle */}
           <button className="icon-btn nav-toggle" onClick={() => setOpen(s => !s)} aria-label="Toggle menu">
             {open ? <X /> : <Menu />}
           </button>
