@@ -217,11 +217,19 @@ const Navbar = ({ userName = 'User' }) => {
   };
 
   const handleNotificationsClick = () => {
+    // Toggle the panel open/closed. When opening, clear unread badge.
+    setShowNotifications((prev) => {
+      const opening = !prev;
+      if (opening) setHasUnread(false);
+      return opening;
+    });
+
     if (typeof Notification === 'undefined') {
       setToast({ message: 'Notifications not supported by your browser.', type: 'error' });
       return;
     }
 
+    // If permission is default and we're opening the panel, prompt the user.
     if (Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
         setNotifPermission(permission);
@@ -238,6 +246,7 @@ const Navbar = ({ userName = 'User' }) => {
     }
 
     if (Notification.permission === 'granted') {
+      // Show a sample notification when the user actively opens the panel
       showRandomInspiration();
       return;
     }
@@ -325,7 +334,7 @@ const Navbar = ({ userName = 'User' }) => {
             <AnimatedGreeting userName={userName} />
           </div>
 
-          <motion.button className="icon-btn nav-icon" title="Notifications" whileHover={{ scale: 1.06 }} onClick={handleBellToggle} aria-pressed={notifPermission === 'granted'}>
+          <motion.button className="icon-btn nav-icon" title="Notifications" whileHover={{ scale: 1.06 }} onClick={handleNotificationsClick} aria-pressed={showNotifications}>
             <Bell />
             <span className="notif-dot" style={{ display: hasUnread ? 'inline-block' : 'none' }} />
           </motion.button>

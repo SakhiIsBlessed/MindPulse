@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { PlusCircle, Edit3, Trash2, Search, Mic, Square, Play, Music, Share2, Download, TrendingUp, Archive, Copy, Check } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, Search, Mic, Square, Play, Music, Share2, Download, TrendingUp, Archive, Copy, Check, FileText } from 'lucide-react';
+import { generateJournalPDF } from '../utils/pdfExport';
 
 const moodEmojis = ['😔', '😐', '😌', '😊', '😄'];
 const entryStickers = ['✨', '💫', '🌟', '⭐', '🎨', '🎭', '🎪', '🎯', '💝', '🌸', '🌺', '🌻', '🌷', '🦋', '🌈'];
@@ -61,6 +62,8 @@ const Journal = () => {
   const [aiInsights, setAiInsights] = useState(null);
   const [showInsightsModal, setShowInsightsModal] = useState(false);
   const [dailyQuestion, setDailyQuestion] = useState(null);
+  const [userData, setUserData] = useState({ username: '', email: '' });
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // Quick entry templates
   const entryTemplates = [
@@ -87,7 +90,30 @@ const Journal = () => {
 
   const tagInputRef = useRef(null);
 
-  useEffect(() => { fetchEntries(); loadMemories(); loadSongs(); }, []);
+  useEffect(() => { 
+    fetchEntries(); 
+    loadMemories(); 
+    loadSongs(); 
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const { data } = await axios.get('/api/user/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUserData({ username: data.username, email: data.email });
+    } catch (err) {
+      console.error('Failed to fetch user data for export:', err);
+      // Fallback to localStorage if API fails
+      setUserData({ 
+        username: localStorage.getItem('username') || 'Student', 
+        email: '' 
+      });
+    }
+  };
 
   useEffect(() => {
     // Set daily question based on current date
@@ -369,6 +395,18 @@ const Journal = () => {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+  };
+
+  const exportToPDF = async () => {
+    try {
+      setIsExportingPDF(true);
+      generateJournalPDF(entries, userData.username, userData.email);
+    } catch (err) {
+      console.error('PDF Export failed', err);
+      alert('Failed to generate PDF report.');
+    } finally {
+      setIsExportingPDF(false);
+    }
   };
 
   const copyToClipboard = (entryId, text) => {
@@ -932,8 +970,23 @@ const Journal = () => {
               className="action-btn"
               onClick={exportToJSON}
               style={{ flex: 1, minWidth: 150, justifyContent: 'center' }}
+              title="Export as JSON"
             >
-              <Download size={18} /> Export
+              <Download size={18} /> JSON
+            </button>
+            <button 
+              className="action-btn"
+              onClick={exportToPDF}
+              disabled={isExportingPDF}
+              style={{ 
+                flex: 1, 
+                minWidth: 150, 
+                justifyContent: 'center',
+                background: isExportingPDF ? '#888' : 'linear-gradient(135deg, #FF512F 0%, #DD2476 100%)'
+              }}
+              title="Export as PDF Report"
+            >
+              <FileText size={18} /> {isExportingPDF ? 'Exporting...' : 'PDF Report'}
             </button>
           </div>
 

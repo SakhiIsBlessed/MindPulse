@@ -80,7 +80,7 @@ const Footer = () => {
             <p className="footer-desc">Mindful journaling & insights to track mood, build healthy habits, and improve wellbeing.</p>
 
             <div className="footer-contact">
-              <a href="mailto:mindpulse1801@gmail.com" className="contact-link"><Mail size={18} /><span>mindpulse1801@gmail.com</span></a>
+              <a href="https://mail.google.com/mail/?view=cm&fs=1&to=mindpulse1801@gmail.com" target="_blank" rel="noopener noreferrer" className="contact-link"><Mail size={18} /><span>mindpulse1801@gmail.com</span></a>
               <a href="tel:+918530932462" className="contact-link"><Phone size={18} /><span>+91 85309 32462</span></a>
             </div>
 

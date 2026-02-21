@@ -3,6 +3,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { User, Lock, AlertCircle, Download } from 'lucide-react';
 import { getGravatarUrl } from '../utils/gravatar';
+import { generateJournalPDF } from '../utils/pdfExport';
 
 const Profile = ({ user = {} }) => {
   const [username, setUsername] = useState(user.username || '');
@@ -12,6 +13,7 @@ const Profile = ({ user = {} }) => {
   const [saving, setSaving] = useState(false);
   const [changingPass, setChangingPass] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -98,6 +100,23 @@ const Profile = ({ user = {} }) => {
     } catch (err) {
       console.error(err);
       alert('Failed to delete account');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      const { data: entries } = await axios.get('/api/journal', config);
+      
+      generateJournalPDF(entries, username, email);
+    } catch (err) {
+      console.error('Export Error:', err);
+      alert(`Failed to generate PDF: ${err.message || 'Unknown error'}.`);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -264,10 +283,11 @@ const Profile = ({ user = {} }) => {
         <div className="danger-actions">
           <button
             className="btn btn-secondary"
-            onClick={() => alert('Export not implemented')}
+            onClick={handleExportPDF}
+            disabled={exporting}
           >
             <Download size={18} />
-            Export Data
+            {exporting ? 'Generating PDF...' : 'Export Data'}
           </button>
           <button
             className="btn btn-danger"
