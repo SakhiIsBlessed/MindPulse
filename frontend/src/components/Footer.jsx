@@ -12,15 +12,39 @@ const socialIcons = [
 const Footer = () => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    setSubscribed(true);
-    setTimeout(() => {
-      setEmail('');
-      setSubscribed(false);
-    }, 1600);
+    if (!email.trim() || loading) return;
+    
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubscribed(true);
+        setEmail('');
+        setTimeout(() => setSubscribed(false), 3000);
+      } else {
+        setError(data.message || 'Something went wrong');
+      }
+    } catch (err) {
+      setError('Could not connect to server');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,11 +110,12 @@ const Footer = () => {
 
             <form className="newsletter-form" onSubmit={handleSubscribe} aria-label="Subscribe form">
               <label className="visually-hidden" htmlFor="mp-email">Email address</label>
-              <input id="mp-email" aria-label="Email" placeholder="Your email" className="footer-input" value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
-              <button className="btn subscribe-btn" type="submit" aria-pressed={subscribed}>
-                {subscribed ? '✓ Subscribed' : (<span className="btn-inner"><Send size={14} /> Subscribe</span>)}
+              <input id="mp-email" aria-label="Email" placeholder="Your email" className="footer-input" value={email} onChange={(e) => setEmail(e.target.value)} type="email" disabled={loading} />
+              <button className="btn subscribe-btn" type="submit" aria-pressed={subscribed} disabled={loading}>
+                {loading ? 'Subscribing...' : (subscribed ? '✓ Subscribed' : (<span className="btn-inner"><Send size={14} /> Subscribe</span>))}
               </button>
             </form>
+            {error && <p className="subscribe-error" style={{ color: '#f87171', fontSize: '12px', marginTop: '8px' }}>{error}</p>}
 
             <div className="footer-note">We respect your privacy. Unsubscribe anytime.</div>
           </motion.div>

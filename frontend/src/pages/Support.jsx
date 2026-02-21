@@ -785,14 +785,18 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
               <Phone size={18} />
               <div>
                 <div className="contact-label">Local Helpline</div>
-                <div className="contact-value">85309 32462</div>
+                <div className="contact-value">
+                  <a href="tel:8530932462" className="contact-link" style={{color: '#000'}}>85309 32462</a>
+                </div>
               </div>
             </div>
             <div className="quick-contact-item">
               <HeartHandshake size={18} />
               <div>
                 <div className="contact-label">Peer Support</div>
-                <div className="contact-value">mindpulse1801@gmail.com</div>
+                <div className="contact-value">
+                  <a href="https://mail.google.com/mail/?view=cm&fs=1&to=mindpulse1801@gmail.com" target="_blank" rel="noopener noreferrer" className="contact-link" style={{color: '#000'}}>mindpulse1801@gmail.com</a>
+                </div>
               </div>
             </div>
           </motion.div>

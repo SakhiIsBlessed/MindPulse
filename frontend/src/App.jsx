@@ -20,7 +20,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import PageWrapper from './components/PageWrapper';
 import HabitTracker from './pages/HabitTracker';
 import WellnessLibrary from './pages/WellnessLibrary';
-import StressHelp from './pages/StressHelp';
 import HelpTopic from './pages/HelpTopic';
 
 function AppContent() {

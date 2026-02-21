@@ -8,9 +8,13 @@ const fs = require('fs').promises;
 dotenv.config();
 
 const { connectDB } = require('./config/db');
+const { startDailyEmailJob } = require('./utils/emailService');
 
 // Connect to database
 connectDB();
+
+// Start background jobs
+startDailyEmailJob();
 
 const app = express();
 
@@ -50,6 +54,7 @@ app.use('/api/journal', require('./routes/journal'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/songs', require('./routes/songs'));
+app.use('/api/subscribe', require('./routes/subscriptionRoutes'));
 
 // Simple health endpoint
 app.get('/health', (req, res) => res.json({ status: 'ok' }));

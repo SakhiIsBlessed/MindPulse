@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+const cron = require('node-cron');
+const Subscription = require('../models/Subscription');
 
 // Transporter cache and metadata
 let transporterCache = null;
@@ -403,9 +405,86 @@ const sendWelcomeEmail = async (email, username) => {
   }
 };
 
+/**
+ * Send daily reminder/tips email to subscribers
+ * @param {string} email
+ */
+const sendDailyEmail = async (email) => {
+  try {
+    const mailOptions = {
+      from: `"MindPulse" <${process.env.EMAIL_USER || 'noreply@mindpulse.com'}>`,
+      to: email,
+      subject: '🌟 Daily MindPulse - Your Path to Wellbeing',
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; padding: 25px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #6366f1; margin: 0; font-size: 28px;">MindPulse</h1>
+            <p style="color: #64748b; margin-top: 5px;">Mindful journaling & insights</p>
+          </div>
+          
+          <div style="background-color: #ffffff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <h2 style="color: #1e293b; margin-top: 0;">Daily Wellbeing Tip</h2>
+            <p style="color: #475569; line-height: 1.6;">
+              "The secret of health for both mind and body is not to mourn for the past, nor to worry about the future, but to live the present moment wisely and earnestly."
+            </p>
+            <p style="color: #475569; line-height: 1.6;">
+              Today, try to spend 5 minutes in complete silence. Just breathe and observe your thoughts without judgment.
+            </p>
+            
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/journal" 
+                 style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                Update My Journal
+              </a>
+            </div>
+          </div>
+
+          <div style="margin-top: 40px; text-align: center; color: #94a3b8; font-size: 13px;">
+            <p>You're receiving this because you subscribed to daily reminders from MindPulse.</p>
+            <p>© 2026 MindPulse. Built with ❤️ for your wellness.</p>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/unsubscribe" style="color: #6366f1; text-decoration: none;">Unsubscribe</a>
+          </div>
+        </div>
+      `,
+      text: `Daily MindPulse Reminder: Stay consistent with your journaling. Visit ${process.env.FRONTEND_URL || 'http://localhost:5173'}/journal to record your thoughts today.`,
+    };
+
+    const { transporter, isTest } = await getTransporter();
+    const info = await transporter.sendMail(mailOptions);
+    if (isTest) {
+      console.log('Daily email preview URL:', nodemailer.getTestMessageUrl(info));
+    }
+    return info;
+  } catch (error) {
+    console.error(`✗ Error sending daily email to ${email}:`, error);
+  }
+};
+
+/**
+ * Schedule daily email at 9:00 AM
+ */
+const startDailyEmailJob = () => {
+  // Cron expression for 9:00 AM every day: '0 9 * * *'
+  cron.schedule('0 9 * * *', async () => {
+    console.log('⏰ Running daily email job...');
+    try {
+      const subscribers = await Subscription.findAll({ where: { isActive: true } });
+      console.log(`Sending emails to ${subscribers.length} subscribers...`);
+      for (const sub of subscribers) {
+        await sendDailyEmail(sub.email);
+      }
+      console.log('✅ Daily email job completed.');
+    } catch (error) {
+      console.error('❌ Error in daily email job:', error);
+    }
+  });
+  console.log('🚀 Daily email scheduler service started.');
+};
+
 module.exports = {
   sendOTPEmail,
   sendPasswordResetConfirmation,
   createTestTransporter,
   sendWelcomeEmail,
+  startDailyEmailJob,
 };

@@ -18,6 +18,7 @@ const connectDB = async () => {
     require('../models/User');
     require('../models/JournalEntry');
     require('../models/EmergencyContact');
+    require('../models/Subscription');
 
     await sequelize.authenticate();
     console.log('MySQL Connected');

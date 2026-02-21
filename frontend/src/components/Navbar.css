@@ -217,22 +217,32 @@
 
 /* Logout Button */
 .btn-logout {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
-  font-size: 0.88rem;
+  /* use a lively gradient and remove harsh border */
+  background: linear-gradient(135deg, var(--gradient-primary), var(--gradient-secondary));
+  border: none;
+  padding: 0.55rem 1.1rem;
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #fff;
   display: flex;
   align-items: center;
   gap: 0.6rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .btn-logout:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  opacity: 0.95;
+}
+
+/* feedback when clicked */
+.btn-logout:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* Mobile Toggle */

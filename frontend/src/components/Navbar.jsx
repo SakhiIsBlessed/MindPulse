@@ -384,7 +384,7 @@ const Navbar = ({ userName = 'User' }) => {
             <span className="nav-avatar-initial">{(userName || 'U').charAt(0).toUpperCase()}</span>
           </motion.button>
 
-          <motion.button className="btn-logout btn-hover" whileHover={{ y: -3, boxShadow: '0 10px 24px rgba(0,0,0,0.08)' }} onClick={doLogout} title="Logout">
+          <motion.button className="btn-logout btn-hover" whileHover={{ y: -3, scale: 1.03, boxShadow: '0 10px 24px rgba(0,0,0,0.08)' }} onClick={doLogout} title="Logout">
             <LogOut size={14} /> <span>Logout</span>
           </motion.button>
 
