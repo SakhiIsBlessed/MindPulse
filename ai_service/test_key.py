@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Try loading from the same path as app.py
+# Load environment variables (same file used by the Flask app)
+# Make sure OPENAI_API_KEY is defined in backend/.env or in your environment
 load_dotenv(dotenv_path='../backend/.env')
 
 key = os.getenv('OPENAI_API_KEY')

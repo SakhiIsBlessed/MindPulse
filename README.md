@@ -42,23 +42,32 @@ Server runs on `http://localhost:5000`.
 
 ### 2. AI Service Setup
 
-```bash
-cd ai_service
-# Create venv
-python -m venv venv
-# Activate venv
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-# source venv/bin/activate
+The AI service uses the OpenAI API. You must provide a key in the environment variables so the chatbot can connect.
 
-pip install -r requirements.txt # OR: pip install flask flask-cors textblob
-python -m textblob.download_corpora
+1. **Add your key to the backend .env** (or set it before launching):
+   ```dotenv
+   OPENAI_API_KEY=sk-············
+   ```
+   You can append this to `backend/.env` alongside the other settings.
 
-python app.py
-```
+2. Start the AI service:
+   ```bash
+   cd ai_service
+   # Create venv if you haven't already
+   python -m venv venv
+   # Activate venv
+   # Windows:
+   venv\Scripts\activate
+   # Mac/Linux:
+   # source venv/bin/activate
 
-AI Service runs on `http://localhost:5001`.
+   pip install -r requirements.txt # OR: pip install flask flask-cors textblob openai python-dotenv
+   python -m textblob.download_corpora
+
+   python app.py
+   ```
+
+The service will run on `http://localhost:5001`. If the key is missing you will see a warning on startup and the app will fall back to simple canned responses.
 
 ### 3. Frontend Setup
 
@@ -81,3 +90,42 @@ Frontend runs on `http://localhost:5173`.
 ## API Documentation
 
 See [API.md](API.md) for detailed endpoint documentation.
+
+## Verify Newsletter Email Delivery
+
+To confirm subscription emails are actually sent:
+
+1. Configure SMTP in `backend/.env`:
+   - `EMAIL_USER=<your-email>`
+   - `EMAIL_PASS=<your-app-password>`
+   - (optional) `FRONTEND_URL=http://localhost:5173`
+2. Start backend (`cd backend && npm run dev`).
+3. Submit the footer form from the app **or** call:
+   ```bash
+   curl -X POST http://localhost:5000/api/subscribe \
+     -H "Content-Type: application/json" \
+     -d '{"email":"you@example.com"}'
+   ```
+4. Check API response:
+   - `emailDelivery.accepted` contains your email => SMTP accepted it.
+   - In non-production, `emailDelivery.previewUrl` appears when Ethereal test
+     transport is used.
+5. Check backend logs:
+   - `✅ Email transporter verified (SMTP)` means real SMTP is connected.
+   - `Subscription email preview URL: ...` means test email is generated (open
+     URL to view email).
+6. Confirm inbox delivery:
+   - Check Inbox + Spam/Promotions.
+   - If not delivered but accepted, check SMTP sender reputation / provider
+     restrictions.
+
+7. Gmail-specific checks (most common issue):
+   - Turn on 2-Step Verification for the sender Gmail account.
+   - Use a generated **App Password** in `EMAIL_PASS` (do not use normal Gmail
+     password).
+   - Keep `EMAIL_USER` exactly same as the sender Gmail.
+8. If API returns HTTP `502` with
+   `Subscription saved, but confirmation email delivery failed...`:
+   - Subscription record is saved, but SMTP did not accept the recipient.
+   - Check `emailDelivery.accepted` / `emailDelivery.rejected` in response and
+     backend `[subscribe] confirmation mail delivery` logs.

@@ -46,7 +46,7 @@ function AppContent() {
         <Route path="/habits" element={<PageWrapper title="Habit Tracker" description="Build positive routines"><HabitTracker /></PageWrapper>} />
         <Route path="/wellness" element={<PageWrapper title="Wellness Library" description="Meditation & mindfulness"><WellnessLibrary /></PageWrapper>} />
         <Route path="/help/:topic" element={<PageWrapper title="Help"><HelpTopic /></PageWrapper>} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<PageWrapper title="Home" description="Welcome"><Home /></PageWrapper>} />
       </Routes>
       
       {!hideNavbar && <FloatingSupport />}

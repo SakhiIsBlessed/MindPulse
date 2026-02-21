@@ -1,5 +1,10 @@
 const nodemailer = require('nodemailer');
-// const cron = require('node-cron');
+let cron;
+try {
+  cron = require('node-cron');
+} catch (err) {
+  console.warn('⚠️ node-cron not found. Daily email job will be disabled. Run "npm install node-cron" in the backend to enable it.');
+}
 const Subscription = require('../models/Subscription');
 
 // Transporter cache and metadata
@@ -405,6 +410,46 @@ const sendWelcomeEmail = async (email, username) => {
   }
 };
 
+
+/**
+ * Send newsletter subscription confirmation email
+ * @param {string} email
+ * @returns {Promise<{info: Object, previewUrl: string | null, isTest: boolean}>}
+ */
+const sendSubscriptionConfirmationEmail = async (email) => {
+  try {
+    const mailOptions = {
+      from: `"MindPulse" <${process.env.EMAIL_USER || 'noreply@mindpulse.com'}>`,
+      to: email,
+      subject: '✅ You are subscribed to MindPulse reminders',
+      html: `
+        <div style="font-family: Arial, Helvetica, sans-serif; background:#0f172a; color:#e2e8f0; padding:24px;"> 
+          <div style="max-width:600px;margin:0 auto;background:rgba(17,24,39,0.9);padding:28px;border-radius:10px;border:1px solid rgba(99,102,241,0.08);"> 
+            <h2 style="color:#a78bfa;margin:0 0 10px;">You're in! 🎉</h2>
+            <p style="color:#94a3b8;margin:0 0 16px;">Thanks for subscribing to MindPulse daily wellbeing reminders.</p>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/journal" style="display:inline-block;padding:10px 18px;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">Open Journal</a>
+            <p style="color:#64748b;margin-top:18px;font-size:13px;">If this wasn't you, you can unsubscribe anytime from the footer link in our emails.</p>
+          </div>
+        </div>
+      `,
+      text: `You're subscribed to MindPulse reminders. Visit ${process.env.FRONTEND_URL || 'http://localhost:5173'}/journal.`,
+    };
+
+    const { transporter, isTest } = await getTransporter();
+    const info = await transporter.sendMail(mailOptions);
+    const previewUrl = isTest ? nodemailer.getTestMessageUrl(info) : null;
+
+    if (previewUrl) {
+      console.log('Subscription email preview URL:', previewUrl);
+    }
+
+    return { info, previewUrl, isTest };
+  } catch (error) {
+    console.error('Error sending subscription confirmation email:', error);
+    throw new Error('Failed to send subscription confirmation email');
+  }
+};
+
 /**
  * Send daily reminder/tips email to subscribers
  * @param {string} email
@@ -464,8 +509,10 @@ const sendDailyEmail = async (email) => {
  * Schedule daily email at 9:00 AM
  */
 const startDailyEmailJob = () => {
-  console.log('⚠️ Daily email scheduler service is temporarily disabled (missing node-cron).');
-  /*
+  if (!cron) {
+    console.warn('🚀 Daily email scheduler service is disabled (missing node-cron).');
+    return;
+  }
   // Cron expression for 9:00 AM every day: '0 9 * * *'
   cron.schedule('0 9 * * *', async () => {
     console.log('⏰ Running daily email job...');
@@ -480,8 +527,7 @@ const startDailyEmailJob = () => {
       console.error('❌ Error in daily email job:', error);
     }
   });
-  */
-  console.log('🚀 (Mock) Daily email scheduler service started.');
+  console.log('🚀 Daily email scheduler service started.');
 };
 
 module.exports = {
@@ -489,5 +535,6 @@ module.exports = {
   sendPasswordResetConfirmation,
   createTestTransporter,
   sendWelcomeEmail,
+  sendSubscriptionConfirmationEmail,
   startDailyEmailJob,
 };

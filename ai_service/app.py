@@ -15,7 +15,15 @@ app = Flask(__name__)
 CORS(app)
 
 # Initialize OpenAI
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    # critical for debugging: warn at startup
+    print("⚠️  WARNING: OPENAI_API_KEY environment variable not set. "
+          "AI requests will use fallback intelligence.")
+    client = None
+else:
+    # create client only when key is present to avoid library errors
+    client = OpenAI(api_key=api_key)
 
 # Wellness Resources & Responses (Fallback/Specifics)
 WELLNESS_SUGGESTIONS = {
@@ -207,6 +215,10 @@ def chat():
 
         # 4. OPENAI GPT RESPONSE
         try:
+            if client is None:
+                # no key available, force fallback path by throwing
+                raise RuntimeError("No OpenAI API client configured")
+
             # System prompt to define persona and output format
             system_prompt = """
             You are MindPulse, a caring, empathetic, and friendly mental wellness companion for students.

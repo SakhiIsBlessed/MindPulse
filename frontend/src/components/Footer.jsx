@@ -14,6 +14,7 @@ const Footer = () => {
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
@@ -21,9 +22,10 @@ const Footer = () => {
     
     setLoading(true);
     setError('');
+    setStatusMessage('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/subscribe', {
+      const response = await fetch('/api/subscribe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -36,9 +38,25 @@ const Footer = () => {
       if (response.ok) {
         setSubscribed(true);
         setEmail('');
+
+        const delivery = data?.emailDelivery;
+        // Prioritize "already subscribed" message if it exists
+        if (data.message && (data.message.toLowerCase().includes('already') || data.message.toLowerCase().includes('welcome back'))) {
+          setStatusMessage(data.message);
+        } else if (delivery?.delivered && Array.isArray(delivery.accepted) && delivery.accepted.length > 0) {
+          setStatusMessage(`Confirmation email sent to ${delivery.accepted[0]}. Please check inbox/spam.`);
+        } else {
+          setStatusMessage(data.message || 'Subscribed successfully.');
+        }
+
         setTimeout(() => setSubscribed(false), 3000);
       } else {
-        setError(data.message || 'Something went wrong');
+        const delivery = data?.emailDelivery;
+        if (delivery && Array.isArray(delivery.rejected) && delivery.rejected.length > 0) {
+          setError(`Subscription saved, but email was rejected for: ${delivery.rejected.join(', ')}`);
+        } else {
+          setError(data.message || 'Something went wrong');
+        }
       }
     } catch (err) {
       setError('Could not connect to server');
@@ -116,6 +134,7 @@ const Footer = () => {
               </button>
             </form>
             {error && <p className="subscribe-error" style={{ color: '#f87171', fontSize: '12px', marginTop: '8px' }}>{error}</p>}
+            {statusMessage && <p className="subscribe-status" style={{ color: '#86efac', fontSize: '12px', marginTop: '8px' }}>{statusMessage}</p>}
 
             <div className="footer-note">We respect your privacy. Unsubscribe anytime.</div>
           </motion.div>
