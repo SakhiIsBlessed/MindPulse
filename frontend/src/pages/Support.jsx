@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, LifeBuoy, Phone, HeartHandshake, Wind, Brain, Plus, X, Edit2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
-import AffirmationWidget from '../components/AffirmationWidget';
 
 const BreathingGuide = () => {
   const [isBreathing, setIsBreathing] = useState(false);
@@ -765,8 +763,18 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
           {/* Motivation */}
           <motion.div className="glass-card support-section motivation-section" variants={cardVariants}>
             <h2>Daily Motivation</h2>
-            <AffirmationWidget />
-            <p className="motivation-text" style={{ marginTop: '1rem' }}>Remember that recovery and wellbeing is a journey. Be kind to yourself.</p>
+            <blockquote className="motivation-quote">
+              "Small steps every day lead to big changes."
+            </blockquote>
+            <p className="motivation-text">Remember that recovery and wellbeing is a journey. Be kind to yourself.</p>
+            <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => alert('You have the strength to get through this. One day at a time! 💪')}
+              >
+                Need Inspiration?
+              </button>
+            </div>
           </motion.div>
         </div>
 
@@ -785,18 +793,14 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
               <Phone size={18} />
               <div>
                 <div className="contact-label">Local Helpline</div>
-                <div className="contact-value">
-                  <a href="tel:8530932462" className="contact-link" style={{color: '#000'}}>85309 32462</a>
-                </div>
+                <div className="contact-value">85309 32462</div>
               </div>
             </div>
             <div className="quick-contact-item">
               <HeartHandshake size={18} />
               <div>
                 <div className="contact-label">Peer Support</div>
-                <div className="contact-value">
-                  <a href="https://mail.google.com/mail/?view=cm&fs=1&to=mindpulse1801@gmail.com" target="_blank" rel="noopener noreferrer" className="contact-link" style={{color: '#000'}}>mindpulse1801@gmail.com</a>
-                </div>
+                <div className="contact-value">mindpulse1801@gmail.com</div>
               </div>
             </div>
           </motion.div>
@@ -805,10 +809,10 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
           <motion.div className="glass-card resource-links small" variants={cardVariants}>
             <h3>Helpful Resources</h3>
             <ul className="links-list">
-              <li><Link to="/help/sleep">🛌 Sleep Tips</Link></li>
-              <li><Link to="/help/study-balance">⚖️ Study-Life Balance</Link></li>
-              <li><Link to="/help/stress">😌 Stress Management</Link></li>
-              <li><Link to="/help/nutrition">🥗 Nutrition Guide</Link></li>
+              <li><a href="/help/sleep">🛌 Sleep Tips</a></li>
+              <li><a href="/help/study-balance">⚖️ Study-Life Balance</a></li>
+              <li><a href="/help/stress">😌 Stress Management</a></li>
+              <li><a href="/help/nutrition">🥗 Nutrition Guide</a></li>
             </ul>
           </motion.div>
         </aside>

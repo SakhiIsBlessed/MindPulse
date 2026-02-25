@@ -6,7 +6,6 @@ import EntryList from '../components/EntryList';
 import Chatbot from '../components/Chatbot';
 import { motion } from 'framer-motion';
 import { LogOut, Heart, TrendingUp, Zap, Mic, StopCircle, Lightbulb, AlertCircle, Target, Activity, Bell, Clock, X } from 'lucide-react';
-import Achievements, { computeStreak } from '../components/Achievements';
 
 const Dashboard = () => {
   const [entries, setEntries] = useState([]);
@@ -619,13 +618,13 @@ const Dashboard = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
               <div>
                 <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                  Journaling Streak
+                  Streak
                 </p>
                 <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-dark)', fontSize: '2rem' }}>
-                  {computeStreak(entries)}d
+                  {entries.length > 0 ? Math.floor(entries.length / 7) : 0}w
                 </h3>
                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  {computeStreak(entries) > 0 ? '🔥 Keep the streak alive!' : 'Start logging today!'}
+                  Weeks active
                 </p>
               </div>
               <div style={{
@@ -643,9 +642,6 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-
-        {/* Achievements Panel */}
-        <Achievements entries={entries} />
 
         {/* Insights & Alerts */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
