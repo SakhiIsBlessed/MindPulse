@@ -19,13 +19,17 @@ const Footer = () => {
   const handleSubscribe = async (e) => {
     e.preventDefault();
     if (!email.trim() || loading) return;
-    
+
     setLoading(true);
     setError('');
     setStatusMessage('');
-    
+
+    // use explicit backend host in development so absolute URL works
+    const baseUrl = import.meta.env.DEV ? 'http://localhost:5000' : '';
+    const url = `${baseUrl}/api/subscribe`;
+
     try {
-      const response = await fetch('/api/subscribe', {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,7 +37,16 @@ const Footer = () => {
         body: JSON.stringify({ email: email.trim() }),
       });
 
-      const data = await response.json();
+      let data = null;
+      // parse JSON if available
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch (parseErr) {
+          console.warn('Failed to parse JSON response from subscribe endpoint', parseErr);
+        }
+      }
 
       if (response.ok) {
         setSubscribed(true);
@@ -41,25 +54,31 @@ const Footer = () => {
 
         const delivery = data?.emailDelivery;
         // Prioritize "already subscribed" message if it exists
-        if (data.message && (data.message.toLowerCase().includes('already') || data.message.toLowerCase().includes('welcome back'))) {
+        if (data?.message && (data.message.toLowerCase().includes('already') || data.message.toLowerCase().includes('welcome back'))) {
           setStatusMessage(data.message);
         } else if (delivery?.delivered && Array.isArray(delivery.accepted) && delivery.accepted.length > 0) {
           setStatusMessage(`Confirmation email sent to ${delivery.accepted[0]}. Please check inbox/spam.`);
         } else {
-          setStatusMessage(data.message || 'Subscribed successfully.');
+          setStatusMessage(data?.message || 'Subscribed successfully.');
         }
 
         setTimeout(() => setSubscribed(false), 3000);
       } else {
-        const delivery = data?.emailDelivery;
-        if (delivery && Array.isArray(delivery.rejected) && delivery.rejected.length > 0) {
-          setError(`Subscription saved, but email was rejected for: ${delivery.rejected.join(', ')}`);
+        if (data) {
+          const delivery = data.emailDelivery;
+          if (delivery && Array.isArray(delivery.rejected) && delivery.rejected.length > 0) {
+            setError(`Subscription saved, but email was rejected for: ${delivery.rejected.join(', ')}`);
+          } else {
+            setError(data.message || 'Something went wrong');
+          }
         } else {
-          setError(data.message || 'Something went wrong');
+          setError(`Server responded with status ${response.status}`);
         }
       }
     } catch (err) {
-      setError('Could not connect to server');
+      // network error or other failure
+      setError('Unable to contact subscription service. Please try again later.');
+      console.error('subscribe fetch error', err);
     } finally {
       setLoading(false);
     }

@@ -51,6 +51,9 @@ app.use('/api/user', require('./routes/user'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/songs', require('./routes/songs'));
 
+// subscription endpoint (newsletter/daily reminders)
+app.use('/api/subscribe', require('./routes/subscriptionRoutes'));
+
 // Simple health endpoint
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
