@@ -286,8 +286,9 @@ const Journal = () => {
       const token = localStorage.getItem('token');
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-      // Use FormData if we have attachments or voice note
-      let useForm = attachments.length > 0 || voiceNote || voiceTranscription;
+      let response;
+      const useForm = attachments.length > 0 || voiceNote || voiceTranscription;
+
       if (useForm) {
         const fd = new FormData();
         fd.append('content', content);
@@ -300,29 +301,33 @@ const Journal = () => {
         attachments.forEach((a, idx) => fd.append('attachments', a.file, a.file.name || `file${idx}`));
 
         if (editId) {
-          await axios.put(`/api/journal/${editId}`, fd, { ...config, headers: { ...(config.headers || {}), 'Content-Type': 'multipart/form-data' } });
+          response = await axios.put(`/api/journal/${editId}`, fd, { ...config, headers: { ...(config.headers || {}), 'Content-Type': 'multipart/form-data' } });
         } else {
-          await axios.post('/api/journal', fd, { ...config, headers: { ...(config.headers || {}), 'Content-Type': 'multipart/form-data' } });
+          response = await axios.post('/api/journal', fd, { ...config, headers: { ...(config.headers || {}), 'Content-Type': 'multipart/form-data' } });
         }
       } else {
         const payload = { content, mood_score: mood, tags, transcription: voiceTranscription, selectedSticker, entryColor };
         if (editId) {
-          await axios.put(`/api/journal/${editId}`, payload, config);
+          response = await axios.put(`/api/journal/${editId}`, payload, config);
         } else {
-          await axios.post('/api/journal', payload, config);
+          response = await axios.post('/api/journal', payload, config);
         }
       }
+
       await fetchEntries();
       
-      // Check for emergency conditions if enabled
-      if (userProfile?.emergency_alert_enabled) {
-        checkEmergencyCondition();
+      // Ethical Wellness Analysis Handling
+      const analysis = response.data?.wellnessAnalysis;
+      if (analysis) {
+        if (analysis.action === 'AUTO_SENT') {
+          alert("✨ Safety First: We've reached out to your emergency contact to ensure you have support today. You're not alone.");
+        } else if (analysis.action === 'REQUEST_CONSENT') {
+          setIsEmergencyModalOpen(true);
+        }
       }
       
-      // Generate AI insights for new entries only
       if (!editId) {
-        const newEntry = { content, mood_score: mood, tags, transcription: voiceTranscription };
-        generateInsights(newEntry);
+        generateInsights({ content, mood_score: mood, tags, transcription: voiceTranscription });
       }
       
       resetForm();
@@ -624,19 +629,6 @@ const Journal = () => {
     return out;
   };
 
-  const checkEmergencyCondition = () => {
-    const stats = getMoodStats();
-    if (stats.average < 2.0 && entries.length >= 3) {
-      setIsEmergencyModalOpen(true);
-      return;
-    }
-
-    const negativeEntries = entries.filter(e => e.sentiment_label === 'negative');
-    if (negativeEntries.length >= 3) {
-      setIsEmergencyModalOpen(true);
-      return;
-    }
-  };
 
   const handleConfirmEmergencyAlert = async () => {
     setIsAlertSending(true);

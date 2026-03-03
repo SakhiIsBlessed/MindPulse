@@ -17,21 +17,29 @@ router.post('/emergency-alert', protect, async (req, res) => {
   try {
     const { pdfData } = req.body; // Base64 PDF string from frontend
     const user = req.user;
+    const isTestMode = process.env.TEST_EMERGENCY_MODE === "true";
+
+    if (isTestMode) {
+      console.log("⚠ Emergency Test Mode Active");
+    }
 
     // 1. Check if user enabled emergency alerts
     if (!user.emergency_alert_enabled) {
       return res.status(403).json({ message: 'Emergency alerts are not enabled in your profile.' });
     }
 
-    // 2. Prevent duplicate alerts within a 7-day window
-    const lastAlert = await EmergencyAlert.findOne({
-      where: {
-        user_id: user.id,
-        createdAt: {
-          [Op.gt]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    // 2. Prevent duplicate alerts within a 7-day window (skip if in test mode)
+    let lastAlert = null;
+    if (!isTestMode) {
+      lastAlert = await EmergencyAlert.findOne({
+        where: {
+          user_id: user.id,
+          createdAt: {
+            [Op.gt]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          }
         }
-      }
-    });
+      });
+    }
 
     if (lastAlert) {
       return res.status(429).json({ message: 'An alert was already sent within the last week. Please reach out to someone directly if you need immediate help.' });
@@ -48,72 +56,68 @@ router.post('/emergency-alert', protect, async (req, res) => {
     }
 
     // 4. Server-side validation of low mood / high risk indicators
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-    const recentEntries = await JournalEntry.findAll({
-      where: {
-        user_id: user.id,
-        createdAt: { [Op.gte]: threeDaysAgo }
-      },
-      order: [['createdAt', 'DESC']]
-    });
-
     let isRiskDetected = false;
     let reason = '';
     let avgMood = 0;
 
-    if (recentEntries.length > 0) {
-      avgMood = recentEntries.reduce((sum, e) => sum + e.mood_score, 0) / recentEntries.length;
-      if (avgMood < 2.0) {
-        isRiskDetected = true;
-        reason = `Sustained low mood (Avg: ${avgMood.toFixed(1)}) over the last 3 days.`;
-      }
-    }
-
-    // Check for high-risk emotion labels
-    const negativeCount = recentEntries.filter(e => e.sentiment_label === 'negative').length;
-    if (negativeCount >= 3) {
+    if (isTestMode) {
       isRiskDetected = true;
-      reason += (reason ? ' ' : '') + 'Multiple high-risk emotional indicators detected in recent journals.';
-    }
+      reason = "TEST_EMERGENCY_MODE: Bypassing mood validation.";
+      avgMood = 1.0; // Simulated for logging purposes
+    } else {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-    if (!isRiskDetected) {
-      // If the user manually triggered but backend doesn't see risk, we still send it if mood is < 3
-      if (avgMood < 3.0) {
+      const recentEntries = await JournalEntry.findAll({
+        where: {
+          user_id: user.id,
+          createdAt: { [Op.gte]: threeDaysAgo }
+        },
+        order: [['createdAt', 'DESC']]
+      });
+
+      if (recentEntries.length > 0) {
+        avgMood = recentEntries.reduce((sum, e) => sum + e.mood_score, 0) / recentEntries.length;
+        if (avgMood < 2.0) {
+          isRiskDetected = true;
+          reason = `Sustained low mood (Avg: ${avgMood.toFixed(1)}) over the last 3 days.`;
+        }
+      }
+
+      // Check for high-risk emotion labels
+      const negativeCount = recentEntries.filter(e => e.sentiment_label === 'negative').length;
+      if (negativeCount >= 3) {
         isRiskDetected = true;
-        reason = 'User requested notification during a period of low-neutral mood.';
-      } else {
-        return res.status(400).json({ message: 'Alert conditions not met. Our system only escalates when multiple risk factors are identified.' });
+        reason += (reason ? ' ' : '') + 'Multiple high-risk emotional indicators detected in recent journals.';
+      }
+
+      if (!isRiskDetected) {
+        // If the user manually triggered but backend doesn't see risk, we still send it if mood is < 3
+        if (avgMood < 3.0) {
+          isRiskDetected = true;
+          reason = 'User requested notification during a period of low-neutral mood.';
+        } else {
+          return res.status(400).json({ message: 'Alert conditions not met. Our system only escalates when multiple risk factors are identified.' });
+        }
       }
     }
 
     // 5. Send Alert Email
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"MindPulse Wellness System" <${process.env.EMAIL_USER}>`,
-      to: contact.email,
-      subject: 'Urgent Wellness Support Notification – Immediate Attention Recommended',
-      text: `Hello,\n\nThis is an important wellness notification regarding ${user.username}.\n\nOur system has identified sustained indicators suggesting that ${user.username} may currently be experiencing significant emotional distress and may require immediate emotional support.\n\nThis message is being sent because the emergency contact feature has been enabled within the account settings.\n\nWe strongly encourage you to initiate a supportive and compassionate conversation with ${user.username} as soon as possible. Early intervention and open communication can make a meaningful difference.\n\nFor your reference, a detailed wellness summary report is attached to this email.\n\nIf you believe the situation may require urgent professional assistance, please consider contacting a qualified mental health professional or local emergency services immediately.\n\nThis notification is intended to promote care, safety, and timely support.\n\nSincerely,\nMindPulse Wellness Monitoring System`,
-      attachments: [
-        {
-          filename: `MindPulse_Wellness_Report_${user.username}_${new Date().toISOString().split('T')[0]}.pdf`,
-          content: pdfData ? pdfData.split('base64,')[1] : '',
-          encoding: 'base64'
-        }
-      ]
-    };
-
-    await transporter.sendMail(mailOptions);
+    const { sendEmergencyAlertEmail } = require('../utils/emailService');
+    
+    await sendEmergencyAlertEmail(
+        contact.email, 
+        contact.name, 
+        user.username, 
+        reason,
+        [
+            {
+                filename: `MindPulse_Wellness_Report_${user.username}_${new Date().toISOString().split('T')[0]}.pdf`,
+                content: pdfData ? pdfData.split('base64,')[1] : '',
+                encoding: 'base64'
+            }
+        ]
+    );
 
     // 6. Log the alert event
     await EmergencyAlert.create({

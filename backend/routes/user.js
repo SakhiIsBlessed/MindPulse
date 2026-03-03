@@ -4,6 +4,7 @@ const { protect } = require('../middleware/authMiddleware');
 const EmergencyContact = require('../models/EmergencyContact');
 const crypto = require('crypto');
 const { sendEmergencyVerificationEmail } = require('../utils/emailService');
+const { Op } = require('sequelize');
 
 // @desc    Get user profile
 // @route   GET /api/user/profile
@@ -111,6 +112,19 @@ router.post('/emergency-contacts', protect, async (req, res) => {
             return res.status(400).json({ message: 'Name, phone, relation, and email are required' });
         }
 
+        // Check for existing contact with same email or phone for this user
+        const existingContact = await EmergencyContact.findOne({
+            where: {
+                user_id: req.user.id,
+                [Op.or]: [{ email }, { phone }]
+            }
+        });
+
+        if (existingContact) {
+            const conflictField = existingContact.email === email ? 'email' : 'phone number';
+            return res.status(400).json({ message: `A contact with this ${conflictField} already exists.` });
+        }
+
         const verification_token = crypto.randomBytes(32).toString('hex');
 
         const contact = await EmergencyContact.create({
@@ -154,11 +168,38 @@ router.put('/emergency-contacts/:id', protect, async (req, res) => {
         if (relation) contact.relation = relation;
         
         if (email && email !== contact.email) {
+            // Check if another contact already uses this email
+            const emailExists = await EmergencyContact.findOne({
+                where: {
+                    user_id: req.user.id,
+                    email,
+                    id: { [Op.ne]: req.params.id }
+                }
+            });
+            if (emailExists) {
+                return res.status(400).json({ message: 'A contact with this email already exists.' });
+            }
+
             contact.email = email;
             contact.email_verified = false;
             contact.verification_token = crypto.randomBytes(32).toString('hex');
             // Send verification email
             await sendEmergencyVerificationEmail(email, contact.name, req.user.username, contact.verification_token);
+        }
+
+        if (phone && phone !== contact.phone) {
+            // Check if another contact already uses this phone
+            const phoneExists = await EmergencyContact.findOne({
+                where: {
+                    user_id: req.user.id,
+                    phone,
+                    id: { [Op.ne]: req.params.id }
+                }
+            });
+            if (phoneExists) {
+                return res.status(400).json({ message: 'A contact with this phone number already exists.' });
+            }
+            contact.phone = phone;
         }
 
         await contact.save();
@@ -238,19 +279,37 @@ router.post('/alert-emergency-contact', protect, async (req, res) => {
 
         const negativePercentage = (negativeCount / recentEntries.length) * 100;
 
-        // If more than 60% of recent entries are negative, send WhatsApp alert
+        // If more than 60% of recent entries are negative, send alert
         if (negativePercentage >= 60) {
-            // Send WhatsApp message via API call (to be handled by frontend or external service)
-            const message = `Hi ${contact.name}, I wanted to check in with you. I've been feeling stressed and could really use someone to talk to. Could we catch up soon? I'm also seeking support at the MindPulse Support page. - From ${req.user.username}`;
+            const reason = `Manual trigger requested: Recent analysis shows ${negativePercentage.toFixed(1)}% negative sentiment over last 5 entries.`;
+            
+            // Generate Wellness Report PDF
+            const { generateWellnessReport } = require('../utils/pdfGenerator');
+            const pdfBuffer = await generateWellnessReport(recentEntries, req.user);
+
+            // Actually send the email now
+            const { sendEmergencyAlertEmail } = require('../utils/emailService');
+            await sendEmergencyAlertEmail(
+                contact.email, 
+                contact.name, 
+                req.user.username, 
+                reason,
+                [
+                    {
+                        filename: `MindPulse_Wellness_Report_${req.user.username}.pdf`,
+                        content: pdfBuffer
+                    }
+                ]
+            );
 
             res.json({
                 success: true,
-                message: 'Alert prepared to send to emergency contact',
+                message: `✓ Alert sent to ${contact.name}!`,
                 sentimentAnalysis: {
                     negativeCount,
                     totalEntries: recentEntries.length,
                     negativePercentage: negativePercentage.toFixed(2),
-                    whatsappMessage: message,
+                    whatsappMessage: `Hi ${contact.name}, I wanted to check in with you. I've been feeling stressed and could really use someone to talk to. Could we catch up soon? - From ${req.user.username}`,
                     contactPhone: contact.phone,
                     contactName: contact.name
                 }

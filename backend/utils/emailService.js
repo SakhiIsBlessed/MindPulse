@@ -588,4 +588,40 @@ module.exports = {
   sendSubscriptionConfirmationEmail,
   startDailyEmailJob,
   sendEmergencyVerificationEmail,
+  sendEmergencyAlertEmail: async (email, contactName, userName, reason, attachments = []) => {
+    try {
+      const mailOptions = {
+        from: `"MindPulse Wellness System" <${process.env.EMAIL_USER || 'noreply@mindpulse.com'}>`,
+        to: email,
+        subject: '🚨 Urgent Wellness Support Notification – Immediate Attention Recommended',
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #fee2e2; border-radius: 10px; background-color: #fef2f2;">
+            <h2 style="color: #ef4444;">Urgent Wellness Notification</h2>
+            <p>Hello ${contactName},</p>
+            <p>This is an automated wellness notification regarding <strong>${userName}</strong> from the MindPulse platform.</p>
+            <p>Our system has identified indicators suggesting that <strong>${userName}</strong> may currently be experiencing significant emotional distress and may require immediate emotional support.</p>
+            <p><strong>Reason for notification:</strong> ${reason}</p>
+            <div style="background-color: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; margin: 20px 0;">
+              <p style="margin: 0; color: #4b5563;">We strongly encourage you to initiate a supportive and compassionate conversation with ${userName} as soon as possible. Early intervention can make a meaningful difference.</p>
+            </div>
+            <p style="font-size: 14px; color: #666;">If you believe the situation requires professional assistance, please contact local emergency services immediately.</p>
+            <hr style="border: none; border-top: 1px solid #fee2e2; margin: 20px 0;" />
+            <p style="font-size: 12px; color: #999;">This notification is part of the student wellness safety net. It was sent because you were verified as ${userName}'s emergency contact.</p>
+          </div>
+        `,
+        text: `Urgent Wellness Notification: ${userName} may be in distress. Reason: ${reason}. Please reach out to them as soon as possible.`,
+        attachments: attachments
+      };
+
+      const { transporter, isTest } = await getTransporter();
+      const info = await transporter.sendMail(mailOptions);
+      if (isTest) {
+        console.log('Emergency alert email preview URL:', nodemailer.getTestMessageUrl(info));
+      }
+      return info;
+    } catch (error) {
+      console.error('Error sending emergency alert email:', error);
+      throw new Error('Failed to send wellness notification');
+    }
+  },
 };

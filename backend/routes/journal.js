@@ -7,6 +7,7 @@ const { protect } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { analyzeWellnessTrend } = require('../utils/emergencyAutomation');
 
 // ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '..', 'uploads', 'audio');
@@ -122,7 +123,13 @@ router.post('/', protect, uploadMulti, async (req, res) => {
       attachments: attachmentUrls,
     });
 
-    res.status(201).json(entry);
+    // Perform ethical wellness analysis
+    const wellnessAnalysis = await analyzeWellnessTrend(req.user.id);
+
+    res.status(201).json({
+      ...entry.toJSON(),
+      wellnessAnalysis
+    });
   } catch (error) {
     console.error('Post error:', error);
     res.status(500).json({ message: error.message });

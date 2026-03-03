@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { User, Lock, AlertCircle, Download } from 'lucide-react';
+import { User, Lock, AlertCircle, Download, Trash2 } from 'lucide-react';
 import { getGravatarUrl } from '../utils/gravatar';
 import { generateJournalPDF } from '../utils/pdfExport';
 
@@ -158,6 +158,26 @@ const Profile = ({ user = {} }) => {
       alert('Could not change password');
     } finally {
       setChangingPass(false);
+    }
+  };
+
+  const handleDeleteContact = async () => {
+    if (!contactId) return;
+    if (!confirm('Are you sure you want to remove this emergency contact? This will also disable emergency alerts.')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+      await axios.delete(`/api/user/emergency-contacts/${contactId}`, config);
+      setEmergencyContact({ name: '', phone: '', relation: '', email: '', email_verified: false });
+      setContactId(null);
+      setEmergencyAlertEnabled(false);
+      alert('Emergency contact removed');
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Failed to remove contact');
     }
   };
 
@@ -379,13 +399,34 @@ const Profile = ({ user = {} }) => {
           ) : (
             <p style={{ margin: 0, color: '#888' }}>No emergency contact added yet.</p>
           )}
-          <button 
-            className="btn btn-secondary" 
-            onClick={openEditModal}
-            style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-          >
-            {contactId ? 'Edit Contact' : 'Add Contact'}
-          </button>
+          <div className="contact-item-actions" style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={openEditModal}
+              style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+            >
+              {contactId ? 'Edit' : 'Add'}
+            </button>
+            {contactId && (
+              <button 
+                className="btn btn-danger" 
+                onClick={handleDeleteContact}
+                style={{ 
+                  padding: '8px', 
+                  fontSize: '0.9rem', 
+                  background: 'rgba(239, 68, 68, 0.1)', 
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Remove Contact"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="form-actions" style={{ marginTop: '20px' }}>
