@@ -31,6 +31,21 @@ const EmergencyContact = sequelize.define(
             allowNull: false,
             comment: 'Relationship to the user (Parent, Sibling, Friend, Partner, Counselor, Other)',
         },
+        email: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                isEmail: true,
+            },
+        },
+        email_verified: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        verification_token: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
     },
     {
         timestamps: true,

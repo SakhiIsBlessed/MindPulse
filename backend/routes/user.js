@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const EmergencyContact = require('../models/EmergencyContact');
+const crypto = require('crypto');
+const { sendEmergencyVerificationEmail } = require('../utils/emailService');
 
 // @desc    Get user profile
 // @route   GET /api/user/profile
@@ -12,6 +14,7 @@ router.get('/profile', protect, async (req, res) => {
             id: req.user.id,
             username: req.user.username,
             email: req.user.email,
+            emergency_alert_enabled: req.user.emergency_alert_enabled,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -23,10 +26,11 @@ router.get('/profile', protect, async (req, res) => {
 // @access  Private
 router.post('/update', protect, async (req, res) => {
     try {
-        const { username, email } = req.body;
+        const { username, email, emergency_alert_enabled } = req.body;
 
         if (username) req.user.username = username;
         if (email) req.user.email = email;
+        if (typeof emergency_alert_enabled !== 'undefined') req.user.emergency_alert_enabled = emergency_alert_enabled;
 
         await req.user.save();
 
@@ -98,19 +102,29 @@ router.get('/emergency-contacts', protect, async (req, res) => {
 // @route   POST /api/user/emergency-contacts
 // @access  Private
 router.post('/emergency-contacts', protect, async (req, res) => {
+    console.log('Emergency Contact Request Body:', req.body);
     try {
-        const { name, phone, relation } = req.body;
+        const { name, phone, relation, email } = req.body;
 
-        if (!name || !phone || !relation) {
-            return res.status(400).json({ message: 'Name, phone, and relation are required' });
+
+        if (!name || !phone || !relation || !email) {
+            return res.status(400).json({ message: 'Name, phone, relation, and email are required' });
         }
+
+        const verification_token = crypto.randomBytes(32).toString('hex');
 
         const contact = await EmergencyContact.create({
             user_id: req.user.id,
             name,
             phone,
-            relation
+            relation,
+            email,
+            verification_token,
+            email_verified: false
         });
+
+        // Send verification email
+        await sendEmergencyVerificationEmail(email, name, req.user.username, verification_token);
 
         res.status(201).json(contact);
     } catch (error) {
@@ -123,7 +137,7 @@ router.post('/emergency-contacts', protect, async (req, res) => {
 // @access  Private
 router.put('/emergency-contacts/:id', protect, async (req, res) => {
     try {
-        const { name, phone, relation } = req.body;
+        const { name, phone, relation, email } = req.body;
 
         const contact = await EmergencyContact.findByPk(req.params.id);
 
@@ -138,6 +152,14 @@ router.put('/emergency-contacts/:id', protect, async (req, res) => {
         if (name) contact.name = name;
         if (phone) contact.phone = phone;
         if (relation) contact.relation = relation;
+        
+        if (email && email !== contact.email) {
+            contact.email = email;
+            contact.email_verified = false;
+            contact.verification_token = crypto.randomBytes(32).toString('hex');
+            // Send verification email
+            await sendEmergencyVerificationEmail(email, contact.name, req.user.username, contact.verification_token);
+        }
 
         await contact.save();
 

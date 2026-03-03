@@ -44,16 +44,21 @@ const getTransporter = async () => {
         user: emailUser,
         pass: emailPass,
       },
+      connectionTimeout: 8000, // 8 seconds
+      greetingTimeout: 8000,
+      socketTimeout: 10000,
     });
 
-    // Verify transporter (will throw if credentials are invalid)
+    // Verify transporter (will throw if credentials are invalid or connection hangs)
     try {
+      // Use a timeout for the verify call itself if possible, 
+      // though connectionTimeout handles the socket level.
       await transporterCache.verify();
       console.log('✅ Email transporter verified (SMTP)');
     } catch (err) {
-      console.error('⚠️ SMTP verify failed, falling back to Ethereal test account:', err.message);
-      // fallback to test transporter
-      return { transporter: await createTestTransporter(), isTest: transporterIsTest };
+      console.error('⚠️ SMTP verify failed or timed out, falling back to Ethereal:', err.message);
+      transporterCache = null; // Reset cache so we don't keep trying a broken transporter
+      return { transporter: await createTestTransporter(), isTest: true };
     }
 
     return { transporter: transporterCache, isTest: transporterIsTest };
@@ -530,6 +535,51 @@ const startDailyEmailJob = () => {
   console.log('🚀 Daily email scheduler service started.');
 };
 
+/**
+ * Send verification email to emergency contact
+ * @param {string} email - Contact's email
+ * @param {string} contactName - Contact's name
+ * @param {string} userName - User's name
+ * @param {string} token - Verification token
+ */
+const sendEmergencyVerificationEmail = async (email, contactName, userName, token) => {
+  const verifyUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/verify-emergency-email?token=${token}`;
+  
+  try {
+    const mailOptions = {
+      from: `"MindPulse Wellness" <${process.env.EMAIL_USER || 'noreply@mindpulse.com'}>`,
+      to: email,
+      subject: '🚨 Action Required: Verify Emergency Contact for MindPulse',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #6366f1;">Verify Your Email</h2>
+          <p>Hello ${contactName},</p>
+          <p><strong>${userName}</strong> has added you as their emergency contact on <strong>MindPulse</strong>, a student mental wellness platform.</p>
+          <p>To ensure we can reach you in case of a serious wellness concern, please verify your email address by clicking the button below:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verifyUrl}" style="background-color: #6366f1; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Verify Email Address</a>
+          </div>
+          <p style="font-size: 14px; color: #666;">If the button above doesn't work, copy and paste this link into your browser:</p>
+          <p style="font-size: 14px; color: #666;">${verifyUrl}</p>
+          <hr />
+          <p style="font-size: 12px; color: #999;">If you did not expect this email, please ignore it. This is a wellness safety feature.</p>
+        </div>
+      `,
+      text: `Hello ${contactName}, ${userName} has added you as their emergency contact on MindPulse. Please verify your email here: ${verifyUrl}`,
+    };
+
+    const { transporter, isTest } = await getTransporter();
+    const info = await transporter.sendMail(mailOptions);
+    if (isTest) {
+      console.log('Emergency verification email preview URL:', nodemailer.getTestMessageUrl(info));
+    }
+    return info;
+  } catch (error) {
+    console.error('Error sending emergency verification email:', error);
+    throw new Error('Failed to send verification email');
+  }
+};
+
 module.exports = {
   sendOTPEmail,
   sendPasswordResetConfirmation,
@@ -537,4 +587,5 @@ module.exports = {
   sendWelcomeEmail,
   sendSubscriptionConfirmationEmail,
   startDailyEmailJob,
+  sendEmergencyVerificationEmail,
 };

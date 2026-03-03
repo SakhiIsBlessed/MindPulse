@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { PlusCircle, Edit3, Trash2, Search, Mic, Square, Play, Music, Share2, Download, TrendingUp, Archive, Copy, Check } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, Search, Mic, Square, Play, Music, Share2, Download, TrendingUp, Archive, Copy, Check, AlertCircle } from 'lucide-react';
+import EmergencyModal from '../components/EmergencyModal';
+import { generateJournalPDF } from '../utils/pdfExport';
 
 const moodEmojis = ['😔', '😐', '😌', '😊', '😄'];
 const entryStickers = ['✨', '💫', '🌟', '⭐', '🎨', '🎭', '🎪', '🎯', '💝', '🌸', '🌺', '🌻', '🌷', '🦋', '🌈'];
@@ -61,6 +63,9 @@ const Journal = () => {
   const [aiInsights, setAiInsights] = useState(null);
   const [showInsightsModal, setShowInsightsModal] = useState(false);
   const [dailyQuestion, setDailyQuestion] = useState(null);
+  const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
+  const [isAlertSending, setIsAlertSending] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
 
   // Quick entry templates
   const entryTemplates = [
@@ -87,7 +92,7 @@ const Journal = () => {
 
   const tagInputRef = useRef(null);
 
-  useEffect(() => { fetchEntries(); loadMemories(); loadSongs(); }, []);
+  useEffect(() => { fetchEntries(); loadMemories(); loadSongs(); fetchUserProfile(); }, []);
 
   useEffect(() => {
     // Set daily question based on current date
@@ -130,6 +135,16 @@ const Journal = () => {
       setFavoriteSongs(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load songs:', err);
+    }
+  };
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const { data } = await axios.get('/api/user/profile', config);
+      setUserProfile(data);
+    } catch (err) {
+      console.error('Failed to fetch user profile:', err);
     }
   };
 
@@ -298,6 +313,11 @@ const Journal = () => {
         }
       }
       await fetchEntries();
+      
+      // Check for emergency conditions if enabled
+      if (userProfile?.emergency_alert_enabled) {
+        checkEmergencyCondition();
+      }
       
       // Generate AI insights for new entries only
       if (!editId) {
@@ -604,6 +624,39 @@ const Journal = () => {
     return out;
   };
 
+  const checkEmergencyCondition = () => {
+    const stats = getMoodStats();
+    if (stats.average < 2.0 && entries.length >= 3) {
+      setIsEmergencyModalOpen(true);
+      return;
+    }
+
+    const negativeEntries = entries.filter(e => e.sentiment_label === 'negative');
+    if (negativeEntries.length >= 3) {
+      setIsEmergencyModalOpen(true);
+      return;
+    }
+  };
+
+  const handleConfirmEmergencyAlert = async () => {
+    setIsAlertSending(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      const pdfBase64 = getJournalPDFBase64(entries, userProfile?.username, userProfile?.email);
+      
+      const response = await axios.post('/api/emergency-alert', { pdfData: pdfBase64 }, config);
+      alert(response.data.message);
+      setIsEmergencyModalOpen(false);
+    } catch (err) {
+      console.error('Alert failed:', err);
+      alert(err.response?.data?.message || 'Failed to send alert');
+    } finally {
+      setIsAlertSending(false);
+    }
+  };
+
   return (
     <div style={{ 
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -611,6 +664,12 @@ const Journal = () => {
       padding: '2rem',
       color: '#333'
     }}>
+      <EmergencyModal 
+        isOpen={isEmergencyModalOpen}
+        onClose={() => setIsEmergencyModalOpen(false)}
+        onConfirm={handleConfirmEmergencyAlert}
+        loading={isAlertSending}
+      />
       <style>{`
         .journal-container { max-width: 1400px; margin: 0 auto; }
         .journal-header { 

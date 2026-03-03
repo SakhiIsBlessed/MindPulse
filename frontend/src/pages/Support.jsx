@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, LifeBuoy, Phone, HeartHandshake, Wind, Brain, Plus, X, Edit2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
 
 const BreathingGuide = () => {
   const [isBreathing, setIsBreathing] = useState(false);
@@ -137,7 +138,7 @@ const BreathingGuide = () => {
 const EmergencyContact = ({ isHighRisk = false }) => {
   const [emergencyContacts, setEmergencyContacts] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ name: '', phone: '', relation: '' });
+  const [formData, setFormData] = useState({ name: '', phone: '', relation: '', email: '' });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -155,31 +156,26 @@ const EmergencyContact = ({ isHighRisk = false }) => {
     try {
       setLoading(true);
       setError(null);
-      const token = getAuthToken();
-
+      const token = localStorage.getItem('token');
       if (!token) {
         setEmergencyContacts([]);
         setLoading(false);
         return;
       }
 
-      const response = await fetch('/api/user/emergency-contacts', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const { data } = await axios.get('/api/user/emergency-contacts', {
+        headers: { Authorization: `Bearer ${token}` }
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setEmergencyContacts(data);
-      } else if (response.status === 401) {
-        setEmergencyContacts([]);
-      } else {
-        throw new Error(`Failed to fetch contacts: ${response.statusText}`);
-      }
+      setEmergencyContacts(data);
     } catch (err) {
       console.error('Error fetching emergency contacts:', err);
-      setError(err.message);
+      const message = err.response?.data?.message || err.message;
+      setError(message);
+      if (err.response?.status === 401 && message.toLowerCase().includes('expire')) {
+        alert('Session expired. Please log in again.');
+        localStorage.clear();
+        window.location.href = '/login';
+      }
       setEmergencyContacts([]);
     } finally {
       setLoading(false);
@@ -188,54 +184,40 @@ const EmergencyContact = ({ isHighRisk = false }) => {
 
   // Add or update contact
   const handleSaveContact = async () => {
-    if (!formData.name || !formData.phone || !formData.relation) {
-      alert('Please fill all fields');
+    if (!formData.name || !formData.relation || !formData.email) {
+      alert('Name, Relation, and Email are required');
       return;
     }
 
     try {
-      const token = getAuthToken();
-      if (!token) {
-        alert('Please log in first');
-        return;
-      }
+      const token = localStorage.getItem('token');
+      if (!token) return alert('Please log in first');
 
-      let response;
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
 
       if (editingId) {
-        // Update existing
-        response = await fetch(`/api/user/emergency-contacts/${editingId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        });
+        await axios.put(`/api/user/emergency-contacts/${editingId}`, formData, config);
       } else {
-        // Add new
-        response = await fetch('/api/user/emergency-contacts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        });
+        await axios.post('/api/user/emergency-contacts', formData, config);
       }
 
-      if (response.ok) {
-        await fetchContacts();
-        setFormData({ name: '', phone: '', relation: '' });
-        setEditingId(null);
-        setShowForm(false);
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
+      await fetchContacts();
+      setFormData({ name: '', phone: '', relation: '', email: '' });
+      setEditingId(null);
+      setShowForm(false);
+      if (!editingId) {
+        alert('Verification email sent! Please ask your contact to check their inbox.');
       }
     } catch (err) {
       console.error('Error saving contact:', err);
-      alert(`Error saving contact: ${err.message}`);
+      const message = err.response?.data?.message || 'Error saving contact';
+      alert(message);
+      if (err.response?.status === 401 && message.toLowerCase().includes('expire')) {
+        localStorage.clear();
+        window.location.href = '/login';
+      }
     }
   };
 
@@ -243,30 +225,25 @@ const EmergencyContact = ({ isHighRisk = false }) => {
   const handleDeleteContact = async (id) => {
     if (window.confirm('Remove this emergency contact?')) {
       try {
-        const token = getAuthToken();
-        const response = await fetch(`/api/user/emergency-contacts/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        const token = localStorage.getItem('token');
+        await axios.delete(`/api/user/emergency-contacts/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-
-        if (response.ok) {
-          await fetchContacts();
-        } else {
-          const error = await response.json();
-          alert(`Error: ${error.message}`);
-        }
+        await fetchContacts();
       } catch (err) {
         console.error('Error deleting contact:', err);
-        alert(`Error deleting contact: ${err.message}`);
+        alert(err.response?.data?.message || 'Error deleting contact');
       }
     }
   };
 
-  // Start editing
   const handleEditContact = (contact) => {
-    setFormData({ name: contact.name, phone: contact.phone, relation: contact.relation });
+    setFormData({ 
+      name: contact.name, 
+      phone: contact.phone, 
+      relation: contact.relation,
+      email: contact.email || ''
+    });
     setEditingId(contact.id);
     setShowForm(true);
   };
@@ -301,7 +278,7 @@ const EmergencyContact = ({ isHighRisk = false }) => {
             onClick={() => {
               setShowForm(true);
               setEditingId(null);
-              setFormData({ name: '', phone: '', relation: '' });
+              setFormData({ name: '', phone: '', relation: '', email: '' });
             }}
           >
             <Plus size={16} /> Add Contact
@@ -320,9 +297,23 @@ const EmergencyContact = ({ isHighRisk = false }) => {
                 exit={{ opacity: 0 }}
               >
                 <div className="contact-info">
-                  <div className="contact-name">{contact.name}</div>
+                  <div className="contact-name">
+                    {contact.name}
+                    <span style={{ 
+                      marginLeft: '10px',
+                      fontSize: '0.65rem', 
+                      padding: '2px 6px', 
+                      borderRadius: '8px', 
+                      background: contact.email_verified ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                      color: contact.email_verified ? '#22c55e' : '#f59e0b',
+                      border: `1px solid ${contact.email_verified ? '#22c55e' : '#f59e0b'}`,
+                      verticalAlign: 'middle'
+                    }}>
+                      {contact.email_verified ? 'Verified' : 'Pending'}
+                    </span>
+                  </div>
                   <div className="contact-relation" style={{ fontSize: '0.75rem', color: '#a0aec0' }}>
-                    {contact.relation}
+                    {contact.relation} • {contact.email}
                   </div>
                 </div>
 
@@ -360,7 +351,7 @@ const EmergencyContact = ({ isHighRisk = false }) => {
               onClick={() => {
                 setShowForm(true);
                 setEditingId(null);
-                setFormData({ name: '', phone: '', relation: '' });
+                setFormData({ name: '', phone: '', relation: '', email: '' });
               }}
               style={{ marginTop: '0.75rem' }}
             >
@@ -380,7 +371,7 @@ const EmergencyContact = ({ isHighRisk = false }) => {
           onClick={() => {
             setShowForm(false);
             setEditingId(null);
-            setFormData({ name: '', phone: '', relation: '' });
+            setFormData({ name: '', phone: '', relation: '', email: '' });
           }}
         >
           <motion.div
@@ -396,7 +387,7 @@ const EmergencyContact = ({ isHighRisk = false }) => {
                 onClick={() => {
                   setShowForm(false);
                   setEditingId(null);
-                  setFormData({ name: '', phone: '', relation: '' });
+                  setFormData({ name: '', phone: '', relation: '', email: '' });
                 }}
               >
                 <X size={20} />
@@ -411,6 +402,17 @@ const EmergencyContact = ({ isHighRisk = false }) => {
                   placeholder="e.g., Mom, Best Friend"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Email Address *</label>
+                <input
+                  type="email"
+                  placeholder="e.g., contact@example.com"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
 
@@ -446,7 +448,7 @@ const EmergencyContact = ({ isHighRisk = false }) => {
                   onClick={() => {
                     setShowForm(false);
                     setEditingId(null);
-                    setFormData({ name: '', phone: '', relation: '' });
+                    setFormData({ name: '', phone: '', relation: '', email: '' });
                   }}
                 >
                   Cancel
@@ -524,31 +526,17 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
   const checkJournalSentiment = async () => {
     try {
       setCheckingSentiment(true);
-      const token = getAuthToken();
-      
+      const token = localStorage.getItem('token');
       if (!token) return;
 
-      // Fetch recent journal entries
-      const journalRes = await fetch('/api/journal', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!journalRes.ok) return;
-
-      const entries = await journalRes.json();
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      const { data: entries } = await axios.get('/api/journal', config);
       if (!Array.isArray(entries) || entries.length === 0) return;
 
-      // Fetch emergency contacts
-      const contactsRes = await fetch('/api/user/emergency-contacts', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const { data: contacts } = await axios.get('/api/user/emergency-contacts', config);
+      setEmergencyContacts(contacts);
 
-      if (contactsRes.ok) {
-        const contacts = await contactsRes.json();
-        setEmergencyContacts(contacts);
-      }
-
-      // Analyze sentiment from last 5 entries
       const negativeKeywords = ['sad', 'depressed', 'stressed', 'stress', 'anxious', 'anxiety', 'worried', 'worry', 'upset', 'angry', 'frustrated', 'lonely', 'alone', 'hopeless', 'helpless'];
       
       let negativeCount = 0;
@@ -565,7 +553,6 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
 
       const negativePercentage = (negativeCount / recentEntries.length) * 100;
 
-      // If more than 60% of recent entries are negative, show alert
       if (negativePercentage >= 60) {
         setSentimentAlert({
           shows: true,
@@ -585,22 +572,12 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
   const sendEmergencyAlert = async (contactId) => {
     try {
       setSendingAlert(true);
-      const token = getAuthToken();
-
-      const response = await fetch('/api/user/alert-emergency-contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ contactId })
+      const token = localStorage.getItem('token');
+      const { data } = await axios.post('/api/user/alert-emergency-contact', { contactId }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      const data = await response.json();
-
       if (data.success) {
-        // In a real app, you'd send the WhatsApp message here
-        // For now, we'll show a success message
         const contact = sentimentAlert.contacts.find(c => c.id === contactId);
         alert(`✓ Alert ready to send to ${contact.name}!\n\nMessage: "${data.sentimentAnalysis.whatsappMessage}"\n\nNote: In production, this would be sent via WhatsApp.`);
         setSentimentAlert(null);
@@ -609,7 +586,7 @@ const Support = ({ risk = 'low', recommendations = [] }) => {
       }
     } catch (err) {
       console.error('Error sending alert:', err);
-      alert('Failed to send alert. Please try again.');
+      alert(err.response?.data?.message || 'Failed to send alert');
     } finally {
       setSendingAlert(false);
     }

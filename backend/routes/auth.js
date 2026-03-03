@@ -118,16 +118,20 @@ router.post('/forgot-password', async (req, res) => {
     await user.save();
 
     // Send OTP email
-    await sendOTPEmail(email, otp);
+    try {
+      await sendOTPEmail(email, otp);
+    } catch (emailError) {
+      console.error('Email sending failed in forgot-password:', emailError);
+      return res.status(500).json({ message: 'Failed to send OTP email. Please check your email configuration.' });
+    }
 
     res.status(200).json({ 
-      message: 'OTP sent to your email. Valid for 10 minutes.',
-      success: true,
-      email: email // Send back masked email for verification steps
+      message: 'OTP sent successfully. Please check your email.',
+      success: true 
     });
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json({ message: 'Error processing request' });
+    res.status(500).json({ message: 'Error processing request: ' + error.message });
   }
 });
 

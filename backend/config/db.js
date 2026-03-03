@@ -8,7 +8,7 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     dialect: 'mysql',
-    logging: false, // Set to console.log for debugging
+    logging: console.log, // Set to console.log for debugging
   }
 );
 
@@ -23,9 +23,8 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('MySQL Connected');
     // Sync models
-    // Changed alter: true to false to prevent "Too many keys" error (MySQL limit 64 keys).
-    // If schema updates are needed, we should use migrations or force: true (data loss warning).
-    await sequelize.sync({ alter: false });
+    // Set alter: true to automatically add missing columns from the User model.
+    await sequelize.sync({ alter: true });
     console.log('Database synced (alter applied)');
   } catch (error) {
     console.error(`Error: ${error.message}`);

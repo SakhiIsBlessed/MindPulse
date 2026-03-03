@@ -65,7 +65,9 @@ const Login = () => {
       setForgotStep('otp');
       setForgotLoading(false);
     } catch (err) {
-      setForgotError(err.response?.data?.message || 'Error requesting OTP');
+      console.error('Forgot password request error:', err);
+      const message = err.response?.data?.message || 'Error requesting OTP. Please try again later.';
+      setForgotError(message);
       setForgotLoading(false);
     }
   };

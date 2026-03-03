@@ -50,6 +50,7 @@ app.use('/api/journal', require('./routes/journal'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/songs', require('./routes/songs'));
+app.use('/api', require('./routes/emergency'));
 
 // subscription endpoint (newsletter/daily reminders)
 app.use('/api/subscribe', require('./routes/subscriptionRoutes'));

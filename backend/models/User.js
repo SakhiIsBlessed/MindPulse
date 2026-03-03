@@ -38,6 +38,12 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
       comment: 'Session timeout for reset token'
+    },
+    emergency_alert_enabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: 'Whether the user has enabled serious emergency notifications'
     }
   },
   {

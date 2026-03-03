@@ -41,40 +41,73 @@ const Register = () => {
   const isEmailTaken = error.toLowerCase().includes('email');
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      width: '100vw',
-      margin: 0,
-      padding: 0
-    }}>
-      {/* Animated background elements */}
-      <div style={{
-        position: 'fixed',
-        top: '-50%',
-        left: '-50%',
-        width: '200%',
-        height: '200%',
-        background: 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%)',
-        pointerEvents: 'none'
-      }} />
-      <div style={{
-        position: 'fixed',
-        bottom: '-50%',
-        right: '-50%',
-        width: '200%',
-        height: '200%',
-        background: 'radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%)',
-        pointerEvents: 'none'
-      }} />
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        width: '100vw',
+        margin: 0,
+        padding: 0,
+        background: 'linear-gradient(135deg, #6366f1 0%, #a21caf 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Animated, colorful background shapes (same as Login page) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-120px',
+          left: '-120px',
+          width: '340px',
+          height: '340px',
+          background: 'radial-gradient(circle at 60% 40%, #818cf8 0%, #a5b4fc 60%, transparent 100%)',
+          filter: 'blur(30px)',
+          opacity: 0.7,
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-100px',
+          right: '-100px',
+          width: '300px',
+          height: '300px',
+          background: 'radial-gradient(circle at 40% 60%, #f472b6 0%, #f9a8d4 60%, transparent 100%)',
+          filter: 'blur(30px)',
+          opacity: 0.6,
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '120vw',
+          height: '120vh',
+          background: 'radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.08) 0%, transparent 80%)',
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      />
 
       <div className="glass-card animate-in" style={{
         width: '100%',
         maxWidth: '420px',
         position: 'relative',
-        zIndex: 1
+        zIndex: 2,
+        background: 'rgba(255,255,255,0.95)',
+        boxShadow: '0 8px 32px 0 rgba(99,102,241,0.18), 0 1.5px 8px 0 rgba(236,72,153,0.10)',
+        borderRadius: '1.5rem',
+        border: '1.5px solid rgba(99,102,241,0.10)',
+        padding: '2.5rem 2rem',
       }}>
         {/* Header with Logo */}
         <div style={{ textAlign: 'center', marginBottom: '1.6rem' }}>
