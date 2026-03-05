@@ -22,8 +22,23 @@ WELLNESS_SUGGESTIONS = {
     'anxious': ['Grounding Technique', 'Journaling', 'Nature Sounds'],
     'sad': ['Positive Affirmation', 'Gratitude Journal', 'Comforting Music'],
     'happy': ['Share your win', 'Keep the streak'],
-    'neutral': ['Daily Check-in', 'Mindfulness']
+    # neutral suggestions include some of the emotional exploration questions
+    # so users can tap them directly if they're unsure how to phrase their feelings
+    'neutral': [
+        'Daily Check-in',
+        'Mindfulness',
+        'Why do I feel this way?',
+        'Is it normal to feel like this?'
+    ]
 }
+
+# Reflection prompts to encourage deeper engagement
+REFLECTION_PROMPTS = [
+    "What happened just before you started feeling this way?",
+    "Where do you feel this emotion in your body?",
+    "If your stress had a voice, what would it say?",
+    "What would help you feel even 5% better right now?"
+]
 
 RISK_KEYWORDS = ['suicide', 'suicidal', 'kill', 'kill myself', 'end my life', 'hurt myself', 'die', 'death', 'jump off','I feel like hurting myself','I don’t want to live anymore.','I feel hopeless and lost.']
 
@@ -112,7 +127,8 @@ INTENT_DEFINITIONS = [
         'i feel empty',
         'i feel tired of everything',
         'dont feel like talking',
-        'feel like crying'
+        'feel like crying',
+        'i am sad'
     ],
     'response': "I'm really sorry you're feeling this way. You don’t have to go through it alone. 💜",
     'emotion': 'sad',
@@ -204,12 +220,107 @@ INTENT_DEFINITIONS = [
     'emotion': 'distress',
     'suggestions': ['Talk to a trusted person', 'Take slow breaths', 'Step into a safe, calm space']
 },{
+    'name': 'emotional_exploration',
+    'patterns': [
+        'why do i feel this way',
+        'is it normal to feel like this',
+        'am i overreacting',
+        'why do i cry for no reason',
+        'why do i feel numb',
+        'why am i always anxious',
+        'why do i lose motivation so fast',
+        'why do i feel lonely even around people'
+    ],
+    'response': "Those are important questions. Exploring what’s behind your feelings can be really helpful — I’m here to listen.",
+    'emotion': 'neutral',
+    'suggestions': ['Describe the situation', *REFLECTION_PROMPTS]
+},
+{
+    'name': 'depression_like',
+    'patterns': [
+        'i feel tired all the time',
+        'i dont feel like getting out of bed',
+        'i dont enjoy things anymore',
+        'everything feels pointless',
+        'i feel emotionally exhausted'
+    ],
+    'response': "I’m sorry you’re going through such a heavy time. You’re not alone in feeling this way.",
+    'emotion': 'sad',
+    'suggestions': ['Reach out to someone you trust', *REFLECTION_PROMPTS]
+},
+{
+    'name': 'anxiety_questions',
+    'patterns': [
+        'how do i stop panic attacks',
+        'why does my heart race',
+        'why do i overthink everything',
+        'how do i calm down quickly',
+        'how do i stop worrying'
+    ],
+    'response': "Anxiety can feel overwhelming, but small steps can make a difference. What have you tried so far?",
+    'emotion': 'anxious',
+    'suggestions': ['Try a grounding exercise', *REFLECTION_PROMPTS]
+},
+{
+    'name': 'student_issues',
+    'patterns': [
+        'i failed my exam',
+        'i cant focus on studies',
+        'im scared of disappointing my parents',
+        'i compare myself to others',
+        'everyone else is doing better than me',
+        'i feel pressure to succeed'
+    ],
+    'response': "School and expectations can put a lot on your shoulders. It’s okay to feel stressed about it.",
+    'emotion': 'stressed',
+    'suggestions': ['Take a short break', *REFLECTION_PROMPTS]
+},
+{
+    'name': 'relationship_social',
+    'patterns': [
+        'my friend ignored me',
+        'i had a fight with my best friend',
+        'i feel left out',
+        'i think nobody likes me',
+        'i feel misunderstood'
+    ],
+    'response': "Interpersonal hurts can cut deep. Would talking about what happened help?",
+    'emotion': 'sad',
+    'suggestions': ['Consider reaching out', *REFLECTION_PROMPTS]
+},
+{
+    'name': 'sleep_routine',
+    'patterns': [
+        'i cant sleep',
+        'i wake up anxious',
+        'i scroll at night and feel worse',
+        'how do i fix my routine'
+    ],
+    'response': "Sleep and routine issues are so common but exhausting. Let’s think about one small change you could try.",
+    'emotion': 'neutral',
+    'suggestions': ['Create a wind‑down plan', *REFLECTION_PROMPTS]
+},
+{
+    'name': 'growth_self',
+    'patterns': [
+        'how do i build confidence',
+        'how do i stop procrastinating',
+        'how do i love myself',
+        'how do i stay consistent',
+        'how do i control anger'
+    ],
+    'response': "Working on yourself is a journey and you’re asking the right questions. Small steps add up.",
+    'emotion': 'neutral',
+    'suggestions': ['Start with one tiny goal', *REFLECTION_PROMPTS]
+},
+{
     'name': 'personal_growth',
     'patterns': ['proud of myself', 'improved this week', 'handled stress better', 'stayed calm'],
     'response': "That’s wonderful progress! Recognizing your growth is a powerful step forward. 🌟",
     'emotion': 'happy',
     'suggestions': ['Celebrate your progress', 'Keep the streak going', 'Share your win']
-},{
+},
+{
     'name': 'out_of_scope',
     'patterns': [
         '2+2', 'what is 2+2',
@@ -286,7 +397,7 @@ def chat():
         clean_lower = re.sub(r"[^\w\s]", "", user_lower)
 
         # Name detection: respond with a friendly welcome when the user provides their name
-        name_match = re.search(r"\b(?:my name is|i am|i'm)\s+([A-Za-z'-]+)\b", user_lower)
+        name_match = re.search(r"\b(?:my name is|i'm)\s+([A-Za-z'-]+)\b", user_lower)
         if name_match:
             name = name_match.group(1).capitalize()
             if 'your name' in user_lower or 'what is your name' in user_lower:
@@ -397,7 +508,7 @@ def chat():
             'text': ai_text,
             'emotion': emotion,
             'risk': False,
-            'suggestions': WELLNESS_SUGGESTIONS.get(emotion, ['Breathing', 'Journaling'])
+            'suggestions': WELLNESS_SUGGESTIONS.get(emotion, ['Breathing', 'Journaling']) + REFLECTION_PROMPTS
         })
 
     except Exception as e:
