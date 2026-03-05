@@ -415,6 +415,7 @@ def chat():
                     'suggestions': ['Daily Check-in']
                 })
 
+
         # 1. IMMEDIATE RISK DETECTION (Safety First)
         # Check phrase keywords against the cleaned text and single-word keywords against token set
         risk_detected = False
